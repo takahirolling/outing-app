@@ -1,0 +1,3086 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>お出かけ提案 - 週末おでかけ</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* ===== オンボーディング ===== */
+    .onboarding {
+      width: 100%;
+      max-width: 420px;
+      background: #fff;
+      padding: 0 0 40px;
+      display: flex;
+      flex-direction: column;
+    }
+    .ob-step { display: none; animation: fadeIn 0.4s ease; }
+    .ob-step.active { display: flex; flex-direction: column; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+    @keyframes countUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes heatPulse { 0%,100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.15); opacity: 0.8; } }
+
+    .ob-progress { display: flex; gap: 6px; padding: 20px 24px 0; }
+    .ob-progress-dot { flex: 1; height: 3px; border-radius: 2px; background: #e0e0e0; transition: background 0.3s; }
+    .ob-progress-dot.done { background: #4a6cf7; }
+
+    .ob-body { padding: 0 24px; }
+
+    /* Step 0: 移動データ分析 */
+    .data-hero {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      padding: 32px 24px 24px;
+      color: #fff;
+      position: relative;
+      overflow: hidden;
+    }
+    .data-hero::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -30%;
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(74,108,247,0.2) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    .data-hero-icon { font-size: 14px; color: #8b9cf7; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+    .data-hero-icon .dot { width: 6px; height: 6px; background: #4ade80; border-radius: 50%; animation: pulse 2s infinite; }
+    .data-hero h2 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+    .data-hero p { font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.5; }
+
+    /* ヒートマップ風 */
+    .heatmap {
+      background: #f8fafc;
+      border-radius: 16px;
+      padding: 18px;
+      margin: 20px 0 16px;
+      position: relative;
+    }
+    .heatmap-title { font-size: 12px; color: #888; margin-bottom: 12px; font-weight: 600; }
+    .heatmap-visual {
+      position: relative;
+      height: 140px;
+      background: #eef2f7;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .heatmap-road {
+      position: absolute;
+      background: rgba(180,190,210,0.4);
+      border-radius: 2px;
+    }
+    .heatmap-dot {
+      position: absolute;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .heatmap-dot .glow {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      animation: heatPulse 3s infinite;
+    }
+    .heatmap-dot .label {
+      position: absolute;
+      bottom: -18px;
+      font-size: 10px;
+      font-weight: 600;
+      color: #555;
+      white-space: nowrap;
+    }
+    .heatmap-legend {
+      display: flex;
+      gap: 12px;
+      margin-top: 10px;
+      font-size: 10px;
+      color: #999;
+    }
+    .heatmap-legend span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .heatmap-legend .ldot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    /* 移動サマリー */
+    .mobility-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .mob-stat {
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 14px;
+    }
+    .mob-stat .icon { font-size: 18px; margin-bottom: 4px; }
+    .mob-stat .val { font-size: 18px; font-weight: 700; color: #222; animation: countUp 0.6s ease; }
+    .mob-stat .lbl { font-size: 11px; color: #999; margin-top: 2px; }
+
+    .privacy-note {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 11px;
+      color: #166534;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin: 16px 0;
+      line-height: 1.5;
+    }
+    .privacy-note .pi { font-size: 16px; flex-shrink: 0; }
+
+    .ob-transition-text {
+      font-size: 15px;
+      font-weight: 600;
+      color: #333;
+      margin: 20px 0 4px;
+    }
+    .ob-transition-sub {
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 20px;
+    }
+
+    .ob-title { font-size: 22px; font-weight: 700; color: #111; margin-bottom: 8px; }
+    .ob-subtitle { font-size: 13px; color: #888; margin-bottom: 24px; }
+
+    .ob-options { display: flex; flex-direction: column; gap: 10px; }
+    .ob-option {
+      padding: 14px;
+      border: 2px solid #e8e8e8;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .ob-option:hover { border-color: #bbb; }
+    .ob-option.selected { border-color: #4a6cf7; background: #f5f7ff; }
+    .ob-option-icon { font-size: 22px; }
+    .ob-option-text h3 { font-size: 14px; font-weight: 600; color: #222; }
+    .ob-option-text p { font-size: 11px; color: #999; margin-top: 1px; }
+    .ob-check {
+      margin-left: auto;
+      width: 20px; height: 20px;
+      border: 2px solid #ddd;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: transparent;
+      transition: all 0.2s;
+    }
+    .ob-option.selected .ob-check { border-color: #4a6cf7; background: #4a6cf7; color: #fff; }
+
+    .ob-tags { display: flex; flex-wrap: wrap; gap: 10px; }
+    .ob-tag {
+      padding: 10px 16px;
+      border: 2px solid #e8e8e8;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 13px;
+      color: #555;
+    }
+    .ob-tag:hover { border-color: #bbb; }
+    .ob-tag.selected { border-color: #4a6cf7; background: #4a6cf7; color: #fff; }
+
+    .ob-next {
+      margin-top: 24px;
+      padding: 15px;
+      border: none;
+      border-radius: 14px;
+      background: #4a6cf7;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      opacity: 0.3;
+      pointer-events: none;
+      width: 100%;
+    }
+    .ob-next.enabled { opacity: 1; pointer-events: auto; }
+    .ob-next.enabled:hover { background: #3b5de7; }
+    .ob-next.auto-enabled { opacity: 1; pointer-events: auto; }
+
+    /* ===== アプリ本体 ===== */
+    .app { display: none; width: 100%; align-items: center; flex-direction: column; }
+    .app.visible { display: flex; }
+
+    header {
+      width: 100%;
+      max-width: 420px;
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header h1 { font-size: 18px; color: #333; }
+    .header-actions { display: flex; gap: 8px; align-items: center; }
+    .badge { background: #ff4757; color: #fff; font-size: 10px; padding: 2px 7px; border-radius: 10px; }
+    .reset-btn {
+      font-size: 10px;
+      padding: 4px 10px;
+      border-radius: 10px;
+      border: 1px solid #ddd;
+      background: #fff;
+      color: #888;
+      cursor: pointer;
+    }
+    .reset-btn:hover { background: #f5f5f5; color: #333; }
+
+    .personalize-badge { width: 100%; max-width: 420px; padding: 0 20px; }
+    .personalize-inner {
+      background: linear-gradient(135deg, #1a1a2e, #0f3460);
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .personalize-inner span { font-size: 14px; }
+
+    /* カードエリア */
+    .card-area { position: relative; width: 340px; height: 480px; margin: 8px 0; }
+    .card {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      cursor: grab;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .card:active { cursor: grabbing; }
+    .card img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+
+    .card-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 70px 18px 16px;
+      background: linear-gradient(transparent, rgba(0,0,0,0.85));
+      color: #fff;
+    }
+    .card-location-tag {
+      font-size: 10px;
+      background: rgba(74,108,247,0.85);
+      padding: 3px 10px;
+      border-radius: 10px;
+      display: inline-block;
+      margin-bottom: 5px;
+    }
+    .card-category {
+      font-size: 10px;
+      background: rgba(255,255,255,0.2);
+      padding: 3px 10px;
+      border-radius: 10px;
+      display: inline-block;
+      margin-bottom: 6px;
+      margin-left: 4px;
+    }
+    .card-overlay h2 { font-size: 20px; margin-bottom: 4px; }
+    .card-overlay p { font-size: 12px; line-height: 1.5; opacity: 0.9; }
+    .card-reason {
+      margin-top: 8px;
+      padding: 6px 10px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 8px;
+      font-size: 10px;
+      color: rgba(255,255,255,0.75);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      backdrop-filter: blur(4px);
+    }
+    .card-credit { font-size: 9px; opacity: 0.5; margin-top: 6px; }
+
+    .stamp {
+      position: absolute;
+      top: 40px;
+      font-size: 32px;
+      font-weight: bold;
+      padding: 8px 14px;
+      border: 4px solid;
+      border-radius: 12px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.1s;
+    }
+    .stamp-like { left: 20px; color: #2ed573; border-color: #2ed573; transform: rotate(-15deg); }
+    .stamp-nope { right: 20px; color: #ff4757; border-color: #ff4757; transform: rotate(15deg); }
+
+    .buttons { display: flex; gap: 24px; margin-top: 16px; }
+    .btn {
+      width: 60px; height: 60px;
+      border-radius: 50%;
+      border: none;
+      font-size: 26px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.15s;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .btn:hover { transform: scale(1.1); }
+    .btn:active { transform: scale(0.95); }
+    .btn-nope { background: #fff; color: #ff4757; }
+    .btn-like { background: #fff; color: #2ed573; }
+
+    .filters { display: flex; gap: 8px; margin: 14px 0 4px; flex-wrap: wrap; justify-content: center; }
+    .filter-btn {
+      padding: 5px 13px;
+      border-radius: 20px;
+      border: 1.5px solid #ddd;
+      background: #fff;
+      font-size: 12px;
+      color: #555;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-btn.active { background: #333; color: #fff; border-color: #333; }
+
+    /* 冒険度バッジ（カード左上） */
+    .card-adventure-badge {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      z-index: 3;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .card-adventure-badge.home {
+      background: rgba(255,255,255,0.85);
+      color: #666;
+    }
+    .card-adventure-badge.sprout {
+      background: rgba(46,213,115,0.9);
+      color: #fff;
+    }
+    .card-adventure-badge.rocket {
+      background: rgba(255,165,0,0.92);
+      color: #fff;
+    }
+
+    /* モード切替トグル */
+    .mode-toggle {
+      display: flex;
+      background: #f0f2f5;
+      border-radius: 10px;
+      padding: 3px;
+      margin-bottom: 6px;
+      width: fit-content;
+      align-self: center;
+    }
+    .mode-toggle-btn {
+      padding: 5px 14px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      font-size: 11px;
+      font-weight: 600;
+      color: #888;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .mode-toggle-btn.active {
+      background: #fff;
+      color: #333;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+    .adventure-message {
+      text-align: center;
+      font-size: 12px;
+      color: #f59e0b;
+      font-weight: 600;
+      margin-bottom: 4px;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    /* 詳細画面の冒険度 */
+    .detail-adventure-banner {
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .detail-adventure-banner.sprout {
+      background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+      border: 1px solid #a7f3d0;
+    }
+    .detail-adventure-banner.rocket {
+      background: linear-gradient(135deg, #fff7ed, #ffedd5);
+      border: 1px solid #fed7aa;
+    }
+    .dab-icon {
+      font-size: 22px;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+    .dab-content {
+      flex: 1;
+    }
+    .dab-title {
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 3px;
+    }
+    .detail-adventure-banner.sprout .dab-title { color: #059669; }
+    .detail-adventure-banner.rocket .dab-title { color: #d97706; }
+    .dab-reason {
+      font-size: 11px;
+      color: #555;
+      line-height: 1.5;
+    }
+    .dab-safety {
+      margin-top: 6px;
+      font-size: 11px;
+      color: #059669;
+      display: flex;
+      align-items: flex-start;
+      gap: 4px;
+      line-height: 1.4;
+    }
+
+    /* 分析画面 冒険統計 */
+    .adventure-stats {
+      margin-top: 16px;
+    }
+    .adventure-stats h3 {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .adv-stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .adv-stat-item {
+      text-align: center;
+      padding: 12px 8px;
+      border-radius: 12px;
+    }
+    .adv-stat-item.home-bg { background: #f3f4f6; }
+    .adv-stat-item.sprout-bg { background: #ecfdf5; }
+    .adv-stat-item.rocket-bg { background: #fff7ed; }
+    .adv-stat-emoji { font-size: 20px; margin-bottom: 4px; }
+    .adv-stat-val { font-size: 20px; font-weight: 800; color: #333; }
+    .adv-stat-lbl { font-size: 10px; color: #888; margin-top: 2px; }
+    .adv-growth-bar {
+      background: #f0f2f5;
+      border-radius: 8px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .adv-growth-icon { font-size: 22px; }
+    .adv-growth-text { font-size: 12px; color: #555; line-height: 1.5; }
+    .adv-growth-text strong { color: #059669; }
+
+    .empty-msg { text-align: center; color: #888; padding: 60px 20px; }
+    .empty-msg h2 { margin-bottom: 12px; font-size: 18px; }
+
+    /* お気に入り */
+    .favorites-section { width: 100%; max-width: 420px; padding: 0 20px 96px; display: none; }
+    .favorites-section h2 { font-size: 17px; margin: 18px 0 12px; color: #333; }
+    .fav-list { display: flex; flex-direction: column; gap: 10px; }
+    .fav-item {
+      display: flex;
+      gap: 12px;
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .fav-item img { width: 90px; height: 75px; object-fit: cover; }
+    .fav-info { padding: 10px 10px 10px 0; flex: 1; }
+    .fav-info h3 { font-size: 13px; margin-bottom: 3px; }
+    .fav-info p { font-size: 11px; color: #888; }
+    .fav-actions { display: flex; gap: 8px; margin-top: 5px; }
+    .fav-actions button {
+      font-size: 10px;
+      padding: 3px 10px;
+      border-radius: 12px;
+      border: 1px solid #ddd;
+      background: #fff;
+      cursor: pointer;
+    }
+    .fav-actions .line-btn { background: #06c755; color: #fff; border: none; }
+    .fav-empty { text-align: center; color: #aaa; padding: 30px; font-size: 13px; }
+
+    /* ナビ（内部タブ） */
+    nav {
+      position: fixed;
+      bottom: 56px;
+      width: 100%;
+      max-width: 420px;
+      background: #fff;
+      display: flex;
+      border-top: 1px solid #eee;
+      z-index: 100;
+    }
+    nav button {
+      flex: 1;
+      padding: 8px 0;
+      border: none;
+      background: none;
+      font-size: 10px;
+      color: #999;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    nav button.active { color: #4a6cf7; font-weight: bold; }
+    nav button span { font-size: 18px; }
+
+    /* 分析セクション */
+    .stats-section { width: 100%; max-width: 420px; padding: 0 20px 156px; display: none; }
+    .stats-section h2 { font-size: 17px; margin: 18px 0 10px; color: #333; }
+
+    .stats-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .summary-card { background: #fff; border-radius: 14px; padding: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); text-align: center; }
+    .summary-card .num { font-size: 28px; font-weight: 700; color: #333; }
+    .summary-card .label { font-size: 11px; color: #999; margin-top: 3px; }
+
+    .stats-insight {
+      background: linear-gradient(135deg, #1a1a2e, #0f3460);
+      color: #fff;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .stats-insight strong { font-size: 14px; }
+
+    /* 行動パターン */
+    .behavior-section {
+      background: #fff;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .behavior-section h3 { font-size: 14px; color: #333; margin-bottom: 12px; }
+    .behavior-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .behavior-item { text-align: center; }
+    .behavior-item .b-val { font-size: 20px; font-weight: 700; color: #4a6cf7; }
+    .behavior-item .b-lbl { font-size: 11px; color: #888; margin-top: 2px; }
+
+    /* ドーナツチャート */
+    .donut-wrap { display: flex; align-items: center; gap: 16px; margin: 12px 0; }
+    .donut-chart { width: 100px; height: 100px; position: relative; flex-shrink: 0; }
+    .donut-chart svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .donut-chart circle { fill: none; stroke-width: 8; }
+    .donut-center {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+      text-align: center;
+    }
+    .donut-center .d-val { font-size: 18px; font-weight: 700; color: #333; display: block; }
+    .donut-center .d-lbl { font-size: 9px; color: #999; }
+    .donut-legend { font-size: 12px; color: #555; line-height: 2; }
+    .donut-legend span { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: middle; }
+
+    .bar-chart { display: flex; flex-direction: column; gap: 8px; }
+    .bar-row { display: flex; align-items: center; gap: 8px; }
+    .bar-label { width: 90px; font-size: 12px; color: #555; text-align: right; }
+    .bar-track { flex: 1; height: 22px; background: #eee; border-radius: 11px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 11px; transition: width 0.5s ease; }
+
+    .main-content { padding-bottom: 122px; }
+
+    /* ===== 詳細画面 ===== */
+    .detail-screen {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #fff;
+      z-index: 200;
+      overflow-y: auto;
+      animation: slideUp 0.3s ease;
+      max-width: 420px;
+      margin: 0 auto;
+    }
+    .detail-screen.visible { display: block; }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+    .detail-hero {
+      position: relative;
+      height: 280px;
+      overflow: hidden;
+    }
+    .detail-hero img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .detail-back {
+      position: absolute;
+      top: 16px; left: 16px;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(8px);
+      border: none;
+      color: #fff;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .detail-hero-overlay {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 40px 20px 16px;
+      background: linear-gradient(transparent, rgba(0,0,0,0.7));
+      color: #fff;
+    }
+    .detail-hero-overlay h1 { font-size: 22px; font-weight: 700; }
+
+    .detail-body { padding: 0 20px 156px; }
+
+    .detail-tags {
+      display: flex;
+      gap: 8px;
+      margin: 16px 0 12px;
+      flex-wrap: wrap;
+    }
+    .detail-tag {
+      font-size: 11px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: #f0f2f5;
+      color: #555;
+    }
+    .detail-tag.blue {
+      background: rgba(74,108,247,0.1);
+      color: #4a6cf7;
+    }
+
+    .detail-location-card {
+      background: linear-gradient(135deg, #1a1a2e, #0f3460);
+      color: #fff;
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .detail-location-card .dlc-icon { font-size: 24px; }
+    .detail-location-card .dlc-text { flex: 1; }
+    .detail-location-card .dlc-text p { font-size: 13px; font-weight: 600; }
+    .detail-location-card .dlc-text span { font-size: 11px; opacity: 0.7; }
+
+    .detail-section {
+      margin-bottom: 18px;
+    }
+    .detail-section h3 {
+      font-size: 14px;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .detail-section p {
+      font-size: 13px;
+      color: #555;
+      line-height: 1.7;
+    }
+
+    .detail-points {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .detail-point {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 13px;
+      color: #444;
+      line-height: 1.5;
+    }
+    .detail-point .dp-icon {
+      flex-shrink: 0;
+      width: 28px; height: 28px;
+      background: #f0f2f5;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .detail-info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .detail-info-item {
+      background: #f8fafc;
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .detail-info-item .dii-label {
+      font-size: 10px;
+      color: #999;
+      margin-bottom: 3px;
+    }
+    .detail-info-item .dii-value {
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    /* ===== 最新情報セクション ===== */
+    .detail-news-section {
+      margin-bottom: 18px;
+    }
+    .detail-news-section h3 {
+      font-size: 14px;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .news-count {
+      font-size: 11px;
+      color: #999;
+      font-weight: 400;
+      margin-bottom: 10px;
+    }
+    .news-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .news-card {
+      background: #fff;
+      border-radius: 14px;
+      border: 1px solid #eee;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      display: flex;
+      align-items: stretch;
+    }
+    .news-card:active {
+      transform: scale(0.98);
+    }
+    .news-card-img {
+      width: 110px;
+      min-height: 80px;
+      object-fit: cover;
+      display: block;
+      background: #f0f2f5;
+      flex-shrink: 0;
+    }
+    .news-card-body {
+      padding: 10px 12px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-width: 0;
+    }
+    .news-card-tags {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 4px;
+      flex-wrap: wrap;
+    }
+    .news-badge-new {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: #ff4757;
+      color: #fff;
+      letter-spacing: 0.5px;
+    }
+    .news-badge-season {
+      font-size: 9px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: rgba(74,108,247,0.1);
+      color: #4a6cf7;
+    }
+    .news-card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #222;
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      margin-bottom: 6px;
+    }
+    .news-card-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: #999;
+    }
+    .news-card-source {
+      font-weight: 600;
+      color: #777;
+    }
+    .news-more-btn {
+      width: 100%;
+      margin-top: 10px;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #ddd;
+      background: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      color: #4a6cf7;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .news-more-btn:active { background: #f5f7ff; }
+
+    /* ===== パーソナライズ理由 ===== */
+    .detail-reason-personalized {
+      background: linear-gradient(135deg, #f5f7ff 0%, #eef1ff 100%);
+      border: 1px solid #d5dbff;
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 16px;
+    }
+    .drp-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .drp-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #4a6cf7, #7b93fa);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      color: #fff;
+    }
+    .drp-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #4a6cf7;
+      letter-spacing: 0.3px;
+    }
+    .drp-reasons {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .drp-reason-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 12px;
+      color: #444;
+      line-height: 1.5;
+    }
+    .drp-reason-icon {
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+      border-radius: 6px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      margin-top: 1px;
+    }
+    .drp-match-bar {
+      margin-top: 10px;
+      background: #e0e5ff;
+      border-radius: 6px;
+      height: 6px;
+      overflow: hidden;
+    }
+    .drp-match-fill {
+      height: 100%;
+      border-radius: 6px;
+      background: linear-gradient(90deg, #4a6cf7, #7b93fa);
+      transition: width 0.6s ease;
+    }
+    .drp-match-text {
+      font-size: 10px;
+      color: #7b93fa;
+      font-weight: 600;
+      margin-top: 4px;
+      text-align: right;
+    }
+
+    /* ===== 口コミサマリーブロック（おすすめ理由の下） ===== */
+    .reviews-summary-card {
+      background: #fff;
+      border: 1px solid #eee;
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: background 0.15s, box-shadow 0.15s;
+    }
+    .reviews-summary-card:active {
+      background: #f8fafc;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+    }
+    .rsc-star-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex-shrink: 0;
+      min-width: 52px;
+    }
+    .rsc-star-num {
+      font-size: 24px;
+      font-weight: 800;
+      color: #333;
+      line-height: 1;
+    }
+    .rsc-star-icons {
+      font-size: 11px;
+      color: #fbbf24;
+      margin-top: 2px;
+      letter-spacing: 0.5px;
+    }
+    .rsc-divider {
+      width: 1px;
+      height: 36px;
+      background: #eee;
+      flex-shrink: 0;
+    }
+    .rsc-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .rsc-info-row {
+      font-size: 12px;
+      color: #555;
+      line-height: 1.6;
+    }
+    .rsc-info-row strong {
+      color: #4a6cf7;
+      font-weight: 600;
+    }
+    .rsc-arrow {
+      flex-shrink: 0;
+      font-size: 16px;
+      color: #ccc;
+    }
+
+    /* ===== 口コミカルーセルセクション ===== */
+    .detail-reviews-section {
+      margin-bottom: 18px;
+    }
+    .reviews-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 4px;
+    }
+    .reviews-sub {
+      font-size: 11px;
+      color: #888;
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+    .reviews-sub strong {
+      color: #4a6cf7;
+      font-weight: 600;
+    }
+    .reviews-carousel-wrap {
+      margin: 0 -20px;
+      padding: 0 20px;
+      overflow: hidden;
+      position: relative;
+    }
+    .reviews-carousel {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      padding-bottom: 6px;
+      padding-right: 20px;
+    }
+    .reviews-carousel::-webkit-scrollbar { display: none; }
+    .review-card {
+      flex: 0 0 82%;
+      max-width: 320px;
+      scroll-snap-align: start;
+      background: #fff;
+      border: 1px solid #f0f0f0;
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      transition: transform 0.15s;
+    }
+    .review-card:last-child {
+      margin-right: 20px;
+    }
+    .review-card:active { transform: scale(0.98); }
+    .review-card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .review-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .review-user-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .review-user-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+    }
+    .review-visit-date {
+      font-size: 10px;
+      color: #aaa;
+    }
+    .review-stars {
+      font-size: 11px;
+      color: #fbbf24;
+      letter-spacing: 0.5px;
+      flex-shrink: 0;
+    }
+    .review-badges {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+    .review-badge {
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .review-badge.family { background: #fef3e2; color: #d97706; }
+    .review-badge.pref { background: #eef4ff; color: #4a6cf7; }
+    .review-badge.area { background: #ecfdf5; color: #059669; }
+    .review-text {
+      font-size: 13px;
+      color: #444;
+      line-height: 1.6;
+    }
+    .review-helpful {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid #f5f5f5;
+    }
+    .review-helpful-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+      background: #fff;
+      font-size: 11px;
+      color: #888;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .review-helpful-btn:active,
+    .review-helpful-btn.liked {
+      background: #f0f5ff;
+      border-color: #c5d5ff;
+      color: #4a6cf7;
+    }
+    .review-helpful-count {
+      font-size: 10px;
+      color: #aaa;
+    }
+    .reviews-dots {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 10px;
+    }
+    .reviews-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #ddd;
+      transition: all 0.2s;
+    }
+    .reviews-dot.active {
+      width: 18px;
+      border-radius: 3px;
+      background: #4a6cf7;
+    }
+
+    /* ===== ルートマップ ===== */
+    .detail-route-section {
+      margin-bottom: 18px;
+    }
+    .detail-route-section h3 {
+      font-size: 14px;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .route-map-container {
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid #d5dbe3;
+      background: #f0ede6;
+      position: relative;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .route-map-svg-wrap {
+      width: 100%;
+      height: 210px;
+      position: relative;
+      overflow: hidden;
+    }
+    .route-map-svg-wrap svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .route-info-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: #fff;
+      border-top: 1px solid #eee;
+    }
+    .route-info-detail {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .route-info-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+    }
+    .route-info-item span {
+      font-size: 15px;
+    }
+    .route-info-divider {
+      width: 1px;
+      height: 18px;
+      background: #ddd;
+    }
+    .route-navi-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: none;
+      background: #4a6cf7;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .route-navi-btn:active { background: #3a5ce5; }
+    .route-endpoints {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: #f8fafc;
+      border-top: 1px solid #eee;
+      font-size: 11px;
+      color: #666;
+    }
+    .route-ep-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .route-ep-line {
+      width: 20px;
+      height: 1px;
+      background: #ccc;
+      flex-shrink: 0;
+    }
+
+    .detail-actions {
+      position: fixed;
+      bottom: 56px; left: 0; right: 0;
+      max-width: 420px;
+      margin: 0 auto;
+      background: #fff;
+      border-top: 1px solid #eee;
+      padding: 12px 20px;
+      display: flex;
+      gap: 10px;
+      z-index: 210;
+    }
+    .detail-actions button {
+      flex: 1;
+      padding: 14px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+    .detail-btn-share {
+      background: #06c755;
+      color: #fff;
+    }
+    .detail-btn-share:hover { background: #05b34a; }
+    .detail-btn-remove {
+      background: #f0f2f5;
+      color: #888;
+    }
+    .detail-btn-remove:hover { background: #e5e7eb; color: #555; }
+    /* ===== グローバルタブバー ===== */
+    .global-tab-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      max-width: 420px;
+      margin: 0 auto;
+      height: 56px;
+      background: #fff;
+      display: flex;
+      border-top: 1px solid #e0e0e0;
+      z-index: 300;
+    }
+    .global-tab-bar a {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      color: #999;
+      font-size: 10px;
+      gap: 2px;
+      transition: color 0.2s;
+    }
+    .global-tab-bar a.active { color: #4a6cf7; font-weight: 600; }
+    .global-tab-bar a .tab-icon { font-size: 20px; }
+    .global-tab-bar a .tab-label { font-size: 10px; }
+  </style>
+</head>
+<body>
+
+<!-- ===== オンボーディング ===== -->
+<div class="onboarding" id="onboarding">
+
+  <!-- Step 0: 移動データ分析 -->
+  <div class="ob-step active" id="obStep0">
+    <div class="ob-progress">
+      <div class="ob-progress-dot done"></div>
+      <div class="ob-progress-dot"></div>
+      <div class="ob-progress-dot"></div>
+    </div>
+    <div class="data-hero">
+      <div class="data-hero-icon"><div class="dot"></div> Connected Drive と連携中</div>
+      <h2>あなたの移動データを<br>分析しました</h2>
+      <p>過去3ヶ月の車両データからお出かけ傾向を読み取りました</p>
+    </div>
+    <div class="ob-body">
+      <!-- ヒートマップ -->
+      <div class="heatmap">
+        <div class="heatmap-title">よく訪れるエリア（過去3ヶ月）</div>
+        <div class="heatmap-visual" id="heatmapVisual">
+          <!-- 道路風ライン -->
+          <div class="heatmap-road" style="top:70px;left:0;width:100%;height:2px;"></div>
+          <div class="heatmap-road" style="top:30px;left:60%;width:2px;height:110px;"></div>
+          <div class="heatmap-road" style="top:50px;left:20%;width:50%;height:2px;transform:rotate(-15deg);"></div>
+          <!-- 茅ヶ崎 (最頻) -->
+          <div class="heatmap-dot" style="width:52px;height:52px;top:44px;left:25%;">
+            <div class="glow" style="background:rgba(239,68,68,0.3);"></div>
+            <div style="width:26px;height:26px;border-radius:50%;background:rgba(239,68,68,0.7);"></div>
+            <div class="label">茅ヶ崎</div>
+          </div>
+          <!-- 鎌倉 -->
+          <div class="heatmap-dot" style="width:42px;height:42px;top:35px;left:52%;">
+            <div class="glow" style="background:rgba(251,146,60,0.3);animation-delay:0.5s;"></div>
+            <div style="width:22px;height:22px;border-radius:50%;background:rgba(251,146,60,0.7);"></div>
+            <div class="label">鎌倉</div>
+          </div>
+          <!-- 箱根 -->
+          <div class="heatmap-dot" style="width:36px;height:36px;top:58px;left:78%;">
+            <div class="glow" style="background:rgba(250,204,21,0.3);animation-delay:1s;"></div>
+            <div style="width:18px;height:18px;border-radius:50%;background:rgba(250,204,21,0.7);"></div>
+            <div class="label">箱根</div>
+          </div>
+          <!-- 自宅 -->
+          <div class="heatmap-dot" style="width:16px;height:16px;top:62px;left:10%;">
+            <div style="width:10px;height:10px;border-radius:50%;background:#4a6cf7;"></div>
+            <div class="label" style="color:#4a6cf7;">自宅</div>
+          </div>
+        </div>
+        <div class="heatmap-legend">
+          <span><div class="ldot" style="background:#ef4444;"></div>高頻度</span>
+          <span><div class="ldot" style="background:#fb923c;"></div>中頻度</span>
+          <span><div class="ldot" style="background:#facc15;"></div>低頻度</span>
+        </div>
+      </div>
+
+      <!-- 移動サマリー -->
+      <div class="mobility-stats">
+        <div class="mob-stat">
+          <div class="icon">📅</div>
+          <div class="val">月2-3回</div>
+          <div class="lbl">週末お出かけ頻度</div>
+        </div>
+        <div class="mob-stat">
+          <div class="icon">🚗</div>
+          <div class="val">30-50km</div>
+          <div class="lbl">平均移動距離</div>
+        </div>
+        <div class="mob-stat">
+          <div class="icon">🕐</div>
+          <div class="val">土曜午前</div>
+          <div class="lbl">出発が多い曜日・時間</div>
+        </div>
+        <div class="mob-stat">
+          <div class="icon">📍</div>
+          <div class="val">湘南エリア</div>
+          <div class="lbl">最も訪問が多い地域</div>
+        </div>
+      </div>
+
+      <div class="privacy-note">
+        <div class="pi">🔒</div>
+        <div>移動データはお客様の端末内でのみ処理され、外部に送信されることはありません。データの利用はいつでもオフにできます。</div>
+      </div>
+
+      <button class="ob-next auto-enabled" id="obNext0">この情報をもとに、好みを教える</button>
+    </div>
+  </div>
+
+  <!-- Step 1: 家族構成 -->
+  <div class="ob-step" id="obStep1">
+    <div class="ob-progress">
+      <div class="ob-progress-dot done"></div>
+      <div class="ob-progress-dot done"></div>
+      <div class="ob-progress-dot"></div>
+    </div>
+    <div class="ob-body" style="padding-top:24px;">
+      <p class="ob-transition-text">移動データと合わせて、あなたの好みを教えてください</p>
+      <p class="ob-transition-sub">よりパーソナライズされた提案ができます</p>
+      <h2 class="ob-title">家族構成は？</h2>
+      <div class="ob-options" id="familyOptions">
+        <div class="ob-option" data-value="solo">
+          <div class="ob-option-icon">🧑</div>
+          <div class="ob-option-text"><h3>一人</h3><p>自由気ままに楽しみたい</p></div>
+          <div class="ob-check">&#10003;</div>
+        </div>
+        <div class="ob-option" data-value="couple">
+          <div class="ob-option-icon">👫</div>
+          <div class="ob-option-text"><h3>カップル</h3><p>二人の時間を大切にしたい</p></div>
+          <div class="ob-check">&#10003;</div>
+        </div>
+        <div class="ob-option" data-value="small_kids">
+          <div class="ob-option-icon">👶</div>
+          <div class="ob-option-text"><h3>小さい子供あり</h3><p>未就学児と一緒に</p></div>
+          <div class="ob-check">&#10003;</div>
+        </div>
+        <div class="ob-option" data-value="big_kids">
+          <div class="ob-option-icon">🧒</div>
+          <div class="ob-option-text"><h3>小学生以上の子供あり</h3><p>アクティブに遊びたい</p></div>
+          <div class="ob-check">&#10003;</div>
+        </div>
+      </div>
+      <button class="ob-next" id="obNext1">次へ</button>
+    </div>
+  </div>
+
+  <!-- Step 2: 好み選択 -->
+  <div class="ob-step" id="obStep2">
+    <div class="ob-progress">
+      <div class="ob-progress-dot done"></div>
+      <div class="ob-progress-dot done"></div>
+      <div class="ob-progress-dot done"></div>
+    </div>
+    <div class="ob-body" style="padding-top:24px;">
+      <h2 class="ob-title">好みを3つ選んでください</h2>
+      <p class="ob-subtitle">移動履歴×好みで最適な提案を行います</p>
+      <div class="ob-tags" id="prefTags">
+        <div class="ob-tag" data-value="nature">🌿 自然・公園</div>
+        <div class="ob-tag" data-value="gourmet">🍽 グルメ・カフェ</div>
+        <div class="ob-tag" data-value="art">🎨 アート・文化</div>
+        <div class="ob-tag" data-value="shopping">🛍 ショッピング</div>
+        <div class="ob-tag" data-value="active">⚽ アクティブ・スポーツ</div>
+      </div>
+      <button class="ob-next" id="obNext2">提案を見る</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== アプリ本体 ===== -->
+<div class="app" id="app">
+  <header>
+    <h1>🚗 週末おでかけ</h1>
+    <div class="header-actions">
+      <span class="badge">2 NEW</span>
+      <button class="reset-btn" id="resetBtn">別のプロファイルで試す</button>
+    </div>
+  </header>
+
+  <div class="personalize-badge">
+    <div class="personalize-inner">
+      <span>🚗</span>
+      <div id="personalizeText">移動データ×好みから提案中</div>
+    </div>
+  </div>
+
+  <div class="mode-toggle" id="modeToggle">
+    <button class="mode-toggle-btn active" data-mode="normal" onclick="setMode('normal')">🏠 定番モード</button>
+    <button class="mode-toggle-btn" data-mode="adventure" onclick="setMode('adventure')">🚀 冒険モード</button>
+  </div>
+  <div class="adventure-message" id="adventureMessage">✨ 今日は新しいことに挑戦してみよう！</div>
+
+  <div class="filters" id="filters">
+    <button class="filter-btn active" data-filter="all">すべて</button>
+    <button class="filter-btn" data-filter="今週末">今週末</button>
+    <button class="filter-btn" data-filter="来月">来月</button>
+    <button class="filter-btn" data-filter="春">春</button>
+  </div>
+
+  <div class="main-content" id="mainContent">
+    <div class="card-area" id="cardArea"></div>
+    <div class="buttons" id="buttons">
+      <button class="btn btn-nope" id="btnNope">✕</button>
+      <button class="btn btn-like" id="btnLike">♥</button>
+    </div>
+  </div>
+
+  <div class="favorites-section" id="favSection">
+    <h2>♥ 気になるリスト</h2>
+<div class="fav-list" id="favList"></div>
+  </div>
+
+  <div class="stats-section" id="statsSection">
+    <h2>📊 効果の可視化</h2>
+    <div class="stats-summary" id="statsSummary"></div>
+    <div class="stats-insight" id="statsInsight"></div>
+
+    <h2>🚗 あなたの行動パターン</h2>
+    <div class="behavior-section">
+      <h3>移動データサマリー</h3>
+      <div class="behavior-grid">
+        <div class="behavior-item"><div class="b-val">24回</div><div class="b-lbl">3ヶ月の外出回数</div></div>
+        <div class="behavior-item"><div class="b-val">42km</div><div class="b-lbl">平均移動距離</div></div>
+        <div class="behavior-item"><div class="b-val">土曜</div><div class="b-lbl">最多出発曜日</div></div>
+        <div class="behavior-item"><div class="b-val">9:30</div><div class="b-lbl">平均出発時刻</div></div>
+      </div>
+    </div>
+
+    <div class="behavior-section">
+      <h3>提案エリアのバランス</h3>
+      <div class="donut-wrap">
+        <div class="donut-chart">
+          <svg viewBox="0 0 42 42">
+            <circle cx="21" cy="21" r="16" stroke="#e0e0e0"></circle>
+            <circle cx="21" cy="21" r="16" stroke="#4a6cf7" stroke-dasharray="60 40.5" stroke-dashoffset="0"></circle>
+            <circle cx="21" cy="21" r="16" stroke="#f97316" stroke-dasharray="25 75.5" stroke-dashoffset="-60"></circle>
+            <circle cx="21" cy="21" r="16" stroke="#a3e635" stroke-dasharray="15.5 85" stroke-dashoffset="-85"></circle>
+          </svg>
+          <div class="donut-center">
+            <span class="d-val" id="donutTotal">12</span>
+            <span class="d-lbl">カード</span>
+          </div>
+        </div>
+        <div class="donut-legend">
+          <span style="background:#4a6cf7;"></span>よく行くエリア付近 (60%)<br>
+          <span style="background:#f97316;"></span>少し遠くの新エリア (25%)<br>
+          <span style="background:#a3e635;"></span>全く新しいエリア (15%)
+        </div>
+      </div>
+    </div>
+
+    <h2>カテゴリ別の好み</h2>
+    <div class="bar-chart" id="barChart"></div>
+
+    <div class="adventure-stats" id="adventureStats"></div>
+  </div>
+
+  <nav>
+    <button class="active" data-tab="swipe"><span>🃏</span>提案</button>
+    <button data-tab="favs"><span>♥</span>気になる</button>
+    <button data-tab="stats"><span>📊</span>分析</button>
+  </nav>
+</div>
+
+<!-- ===== 詳細画面 ===== -->
+<div class="detail-screen" id="detailScreen">
+  <div class="detail-hero">
+    <img id="detailImg" src="" alt="">
+    <button class="detail-back" id="detailBack">←</button>
+    <div class="detail-hero-overlay">
+      <h1 id="detailTitle"></h1>
+    </div>
+  </div>
+  <div class="detail-body">
+    <div class="detail-tags" id="detailTags"></div>
+    <div class="detail-location-card" id="detailLocationCard">
+      <div class="dlc-icon">🚗</div>
+      <div class="dlc-text">
+        <p id="detailLocationText"></p>
+        <span id="detailDriveInfo"></span>
+      </div>
+    </div>
+    <div id="detailAdventureBanner"></div>
+    <div id="detailReasonPersonalized"></div>
+    <div id="detailReviewsSummary"></div>
+    <div class="detail-section">
+      <h3>📝 詳しい説明</h3>
+      <p id="detailDesc"></p>
+    </div>
+    <div class="detail-section">
+      <h3>✨ おすすめポイント</h3>
+      <div class="detail-points" id="detailPoints"></div>
+    </div>
+    <div class="detail-reviews-section" id="detailReviewsSection"></div>
+    <div class="detail-route-section">
+      <h3>🗺️ ルート</h3>
+      <div class="route-map-container" id="detailRouteMap"></div>
+    </div>
+    <div class="detail-news-section" id="detailNewsSection">
+      <h3>📰 最新情報</h3>
+      <div class="news-count" id="newsCount"></div>
+      <div class="news-list" id="detailNewsList"></div>
+      <button class="news-more-btn" id="newsMoreBtn" style="display:none;" onclick="showMoreNews()">もっと見る</button>
+    </div>
+    <div class="detail-section">
+      <h3>📍 アクセス・施設情報</h3>
+      <div class="detail-info-grid" id="detailInfoGrid"></div>
+    </div>
+  </div>
+  <div class="detail-actions">
+    <button class="detail-btn-share" id="detailShare">📱 家族に共有</button>
+    <button class="detail-btn-remove" id="detailRemove">気になるから削除</button>
+  </div>
+</div>
+
+<script>
+// ===== モック移動履歴データ =====
+const MOBILITY_DATA = {
+  frequentAreas: ["茅ヶ崎", "鎌倉", "箱根"],
+  frequency: "月2-3回",
+  avgDistance: "30-50km",
+  peakDay: "土曜",
+  peakTime: "午前",
+  homeArea: "藤沢"
+};
+
+// ===== 全カードデータ（詳細情報付き） =====
+const ALL_CARDS = [
+  { id: 1, title: "茅ヶ崎サザンビーチ散歩", desc: "サザンビーチのシンボルモニュメントと海岸線を散歩。湘南の風を感じる定番コース。", image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&h=800&fit=crop", category: "自然・公園", credit: "AI提案", season: "今週末", tags: ["nature"], family: ["solo","couple","big_kids"],
+    locationTag: "いつもの茅ヶ崎方面です", reason: "移動履歴: 茅ヶ崎に月3回訪問 × 自然好き", areaType: "familiar", driveInfo: "自宅から15分",
+    fullDesc: "茅ヶ崎のシンボル「Cのモニュメント」があるサザンビーチから、ヘッドランドまでの海岸線を散歩するコース。烏帽子岩を望む絶景ポイントや、海沿いのおしゃれなカフェも点在。朝の散歩なら人も少なく、サーファーたちの姿を眺めながらリフレッシュできます。帰りにはサザン通り商店街で湘南グルメも楽しめます。",
+    address: "神奈川県茅ヶ崎市中海岸4丁目", hours: "終日開放", holiday: "なし",
+    points: ["🌊 烏帽子岩を望む絶景サンセットポイント","☕ 海沿いにおしゃれカフェが点在","🏄 サーファーウォッチングも楽しい","🅿️ 市営駐車場あり（1日最大1,200円）"] },
+
+  { id: 2, title: "湘南T-SITE & カフェランチ", desc: "蔦屋書店を中心としたおしゃれな複合施設。書籍とカフェでゆったり過ごす湘南の休日。", image: "https://images.unsplash.com/photo-1521017432531-fbd92d768814?w=600&h=800&fit=crop", category: "グルメ・カフェ", credit: "雑誌社コラボ ©️ 湘南スタイル", season: "今週末", tags: ["gourmet","shopping"], family: ["solo","couple"],
+    locationTag: "いつもの茅ヶ崎方面です", reason: "移動履歴 × グルメ好き から提案", areaType: "familiar", driveInfo: "自宅から20分",
+    fullDesc: "蔦屋書店を核とした湘南のライフスタイル複合施設。1号館〜3号館に分かれ、書籍・音楽・映画に加え、セレクトショップやレストランが集まります。テラス席のあるカフェでゆったりランチした後は、湘南らしいインテリアショップやオーガニック食品店を巡るのがおすすめ。",
+    address: "神奈川県藤沢市辻堂元町6-20-1", hours: "8:00〜22:00（店舗により異なる）", holiday: "年中無休",
+    points: ["📚 蔦屋書店で本とコーヒーを楽しむ","🍽 テラス席でゆったりランチ","🛍 湘南セレクトショップ巡り","🅿️ 大型無料駐車場完備"] },
+
+  { id: 3, title: "鎌倉・報国寺の竹林", desc: "美しい竹の庭で抹茶を一服。喧騒を離れた鎌倉の隠れた名所で心を整える。", image: "https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=600&h=800&fit=crop", category: "自然・公園", credit: "AI提案", season: "今週末", tags: ["nature","art"], family: ["solo","couple","big_kids"],
+    locationTag: "鎌倉によく行かれるあなたにおすすめ", reason: "移動履歴: 鎌倉に月2回訪問 × 自然好き", areaType: "familiar", driveInfo: "自宅から25分",
+    fullDesc: "「竹の寺」として知られる報国寺は、約2,000本の孟宗竹が生い茂る美しい竹の庭が見どころ。竹林の奥にある茶席「休耕庵」では、竹林を眺めながら抹茶と干菓子をいただけます（500円）。鎌倉駅からバスで12分、または徒歩30分の散策路も風情があります。朝一番がおすすめ。",
+    address: "神奈川県鎌倉市浄明寺2-7-4", hours: "9:00〜16:00", holiday: "12/29〜1/3",
+    points: ["🎋 約2,000本の孟宗竹が作る幻想空間","🍵 竹林を眺めながら抹茶体験","📸 SNS映えする美しい竹のトンネル","🚶 鎌倉駅からの散策路も風情あり"] },
+
+  { id: 4, title: "鎌倉 小町通り食べ歩き", desc: "しらすトーストにクレープ、抹茶スイーツ。小町通りの人気店を食べ歩くグルメ散歩。", image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&h=800&fit=crop", category: "グルメ・カフェ", credit: "AI提案", season: "今週末", tags: ["gourmet"], family: ["solo","couple","big_kids"],
+    locationTag: "鎌倉によく行かれるあなたにおすすめ", reason: "よく土曜午前に出発されるので、10時開店の食べ歩き", areaType: "familiar", driveInfo: "自宅から25分",
+    fullDesc: "鎌倉駅東口から鶴岡八幡宮へ続く小町通りは、約250mに200以上の店が並ぶ鎌倉一の食べ歩きストリート。名物のしらすトースト、焼きたてせんべい、抹茶ソフトクリーム、生しらす丼など湘南グルメが目白押し。10時頃のスタートがおすすめ。",
+    address: "神奈川県鎌倉市小町1〜2丁目", hours: "10:00〜18:00（店舗により異なる）", holiday: "店舗により異なる",
+    points: ["🦐 名物しらすトーストは必食","🍦 抹茶ソフトクリームの人気店が3軒","🎌 鶴岡八幡宮の参拝とセットで","⏰ 10時スタートで混雑を避ける"] },
+
+  { id: 5, title: "箱根彫刻の森美術館", desc: "緑豊かな庭園に点在するアート作品。ピカソ館やステンドグラスの塔など見どころ満載。", image: "https://images.unsplash.com/photo-1544967082-d9d25d867d66?w=600&h=800&fit=crop", category: "アート・文化", credit: "AI提案", season: "来月", tags: ["art","nature"], family: ["solo","couple","small_kids","big_kids"],
+    locationTag: "箱根によく行かれるあなたにおすすめ", reason: "移動履歴: 箱根訪問あり × アート好き", areaType: "near_new", driveInfo: "自宅から60分",
+    fullDesc: "7万㎡の広大な庭園に120点以上の彫刻が展示される国内初の野外美術館。ピカソ館には319点のコレクション、高さ18mのステンドグラスの塔「幸せをよぶシンフォニー彫刻」は必見。お子さまも楽しめる体験型アート作品や、天然温泉の足湯もあり、家族で一日過ごせます。",
+    address: "神奈川県足柄下郡箱根町ニノ平1121", hours: "9:00〜17:00", holiday: "年中無休",
+    points: ["🗿 120点以上の野外彫刻を散策","🎨 ピカソ館は319点のコレクション","🌈 ステンドグラスの塔は必見フォトスポット","♨️ 敷地内に天然温泉の無料足湯"] },
+
+  { id: 6, title: "箱根の日帰り温泉 & ランチ", desc: "絶景露天風呂でリフレッシュ。地元食材を使った御膳ランチとセットで癒しの一日。", image: "https://images.unsplash.com/photo-1540541338287-41700207dee6?w=600&h=800&fit=crop", category: "グルメ・カフェ", credit: "雑誌社コラボ ©️ おでかけマガジン", season: "来月", tags: ["gourmet","nature"], family: ["solo","couple"],
+    locationTag: "箱根によく行かれるあなたにおすすめ", reason: "移動履歴 × グルメ好き から提案", areaType: "near_new", driveInfo: "自宅から65分",
+    fullDesc: "箱根湯本エリアの日帰り温泉施設。山々を望む開放的な露天風呂でリフレッシュした後は、地元の食材を使った季節の御膳ランチを堪能。温泉+ランチのセットプランがお得です。館内にはリラクゼーションスペースもあり、ゆったりと過ごせます。",
+    address: "神奈川県足柄下郡箱根町湯本", hours: "10:00〜21:00（最終受付20:00）", holiday: "不定休（月1回程度）",
+    points: ["♨️ 山々を望む絶景露天風呂","🍱 地元食材の季節の御膳ランチ","💆 リラクゼーションスペース完備","🅿️ 無料駐車場50台"] },
+
+  { id: 7, title: "横浜中華街グルメツアー", desc: "本格中華を食べ歩き！小籠包、北京ダック、タピオカまで。家族みんなで楽しめる食の旅。", image: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&h=800&fit=crop", category: "グルメ・カフェ", credit: "AI提案", season: "今週末", tags: ["gourmet"], family: ["solo","couple","big_kids"],
+    locationTag: "藤沢から車で40分・いつもの移動圏内です", reason: "移動距離30-50kmの範囲内 × グルメ好き", areaType: "near_new", driveInfo: "自宅から40分",
+    fullDesc: "日本最大の中華街で500以上の店舗が軒を連ねます。食べ歩きなら焼き小籠包、肉まん、北京ダック串がおすすめ。本格レストランで飲茶ランチも人気。食後は中国茶専門店でお茶を楽しんだり、横浜媽祖廟でパワースポット巡りも。",
+    address: "神奈川県横浜市中区山下町", hours: "11:00〜21:00（店舗により異なる）", holiday: "店舗により異なる",
+    points: ["🥟 焼き小籠包の食べ比べが楽しい","🦆 北京ダック串は食べ歩きの定番","🍵 本格中国茶カフェでひと休み","⛩ 横浜媽祖廟でパワースポット巡り"] },
+
+  { id: 8, title: "チームラボ ボーダレス", desc: "光と映像が織りなす没入型アート体験。子どもも大人も夢中になれるデジタルアートミュージアム。", image: "https://images.unsplash.com/photo-1549490349-8643362247b5?w=600&h=800&fit=crop", category: "アート・文化", credit: "雑誌社コラボ ©️ おでかけマガジン", season: "今週末", tags: ["art"], family: ["solo","couple","small_kids","big_kids"],
+    locationTag: "新しいエリアです・鎌倉から15分", reason: "よく土曜午前に出発されるので、10時開館の施設", areaType: "new", driveInfo: "自宅から50分",
+    fullDesc: "境界のないアート群による没入型ミュージアム。作品は部屋から出て通路を移動し、他の作品と混ざり合いながら、境界なく連続する1つの世界を創ります。季節ごとに変化する作品や、自分の描いた絵が壁面で動き出す体験型エリアも。",
+    address: "東京都江東区青海1-3-8", hours: "10:00〜19:00", holiday: "第2・第4火曜日",
+    points: ["🌸 季節で変化する没入型デジタルアート","👶 お子さまも楽しめる体験型エリア","📸 どこを撮ってもフォトジェニック","🎫 事前予約で待ち時間なし"] },
+
+  { id: 9, title: "御殿場プレミアム・アウトレット", desc: "富士山を眺めながらお得にショッピング。290以上の店舗で一日中楽しめる。", image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=600&h=800&fit=crop", category: "ショッピング", credit: "AI提案", season: "来月", tags: ["shopping"], family: ["solo","couple","big_kids"],
+    locationTag: "新しいエリアです・箱根の先30分", reason: "箱根方面のドライブ圏を少し広げた提案", areaType: "new", driveInfo: "自宅から90分",
+    fullDesc: "富士山を正面に望む国内最大級のアウトレットモール。国内外290以上のブランドが揃い、常時30〜70%オフで購入可能。グルメエリアも充実しており、地元の御殿場高原ビールやソフトクリームも人気。箱根観光と合わせて一日コースにするのがおすすめ。",
+    address: "静岡県御殿場市深沢1312", hours: "10:00〜20:00（季節変動あり）", holiday: "年1回（2月第3木曜日）",
+    points: ["🗻 富士山を望む絶景ロケーション","🏷 290以上のブランドが30〜70%オフ","🍺 御殿場高原ビールが飲めるフードコート","♨️ 箱根温泉と組み合わせて1日コースに"] },
+
+  { id: 10, title: "三浦海岸でBBQ & みかん狩り", desc: "海を見ながらBBQ、その後はみかん農園で収穫体験。アクティブな家族にぴったり。", image: "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=600&h=800&fit=crop", category: "アクティブ", credit: "AI提案", season: "春", tags: ["active","nature"], family: ["couple","big_kids"],
+    locationTag: "新しいエリアです・鎌倉から30分先", reason: "移動履歴: 鎌倉方面の延長 × アウトドア好き", areaType: "near_new", driveInfo: "自宅から55分",
+    fullDesc: "三浦海岸のビーチサイドBBQ施設で手ぶらBBQを楽しんだ後は、近くの農園でみかん狩り体験。海の幸も山の幸も味わえる贅沢な一日。三崎まぐろの昼食とセットにするのもおすすめです。",
+    address: "神奈川県三浦市南下浦町上宮田", hours: "BBQ 10:00〜16:00 / みかん狩り 10:00〜15:00", holiday: "雨天時BBQ休業の場合あり",
+    points: ["🔥 海を見ながら手ぶらBBQ","🍊 みかん狩りで収穫体験","🐟 三崎まぐろランチもおすすめ","🏖 海岸散歩とセットで楽しめる"] },
+
+  { id: 11, title: "新江ノ島水族館", desc: "相模湾の生き物を間近で観察。イルカショーにタッチプールなど子どもの好奇心を刺激。", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=600&h=800&fit=crop", category: "キッズ", credit: "AI提案", season: "今週末", tags: ["nature"], family: ["small_kids","big_kids"],
+    locationTag: "いつもの湘南エリアです", reason: "移動履歴: 江ノ島近辺の訪問あり × お子様連れ", areaType: "familiar", driveInfo: "自宅から15分",
+    fullDesc: "相模湾に面した人気水族館。相模湾大水槽では8,000匹のマイワシの大群が銀色に輝く「イワシショー」が圧巻。イルカショーやペンギンのお散歩、タッチプールなど子どもの好奇心を刺激する体験が豊富。江ノ島観光と組み合わせるのがおすすめ。",
+    address: "神奈川県藤沢市片瀬海岸2-19-1", hours: "9:00〜17:00（季節変動あり）", holiday: "年中無休",
+    points: ["🐬 大人気のイルカショー","🐧 ペンギンのお散歩が見られる","🐡 タッチプールで海の生き物に触れる","🏝 江ノ島観光とセットで楽しめる"] },
+
+  { id: 12, title: "こどもの国（横浜）", desc: "広大な敷地で動物ふれあいや遊具、BBQ。一日中遊べるファミリー向けテーマパーク。", image: "https://images.unsplash.com/photo-1566454544259-f4b94c3d758c?w=600&h=800&fit=crop", category: "キッズ", credit: "AI提案", season: "春", tags: ["active"], family: ["small_kids","big_kids"],
+    locationTag: "藤沢から車で45分・移動圏内です", reason: "週末のお出かけ頻度に合わせた提案", areaType: "near_new", driveInfo: "自宅から45分",
+    fullDesc: "約100万㎡の広大な敷地にアスレチック、動物園、BBQ場、プール（夏季）、スケートリンク（冬季）が揃うファミリー向け施設。牧場ではポニー乗馬や乳しぼり体験もでき、一日中飽きずに遊べます。",
+    address: "神奈川県横浜市青葉区奈良町700", hours: "9:30〜16:30", holiday: "水曜日（祝日の場合は翌日）",
+    points: ["🐴 ポニー乗馬や乳しぼり体験","🧗 大型アスレチックで体を動かす","🔥 手ぶらBBQ施設あり","🅿️ 正面駐車場900台（1日900円）"] },
+];
+
+// ===== 冒険度データ =====
+const ADVENTURE_DATA = {
+  1:  { level: "home",      reason: "いつもの茅ヶ崎。安心して楽しめる定番コースです",                       safety: null },
+  2:  { level: "home",      reason: "よく訪れるエリア。移動データから自信を持って提案",                     safety: null },
+  3:  { level: "home",      reason: "月2回通う鎌倉エリア。お馴染みの場所です",                             safety: null },
+  4:  { level: "home",      reason: "鎌倉のグルメスポット。いつもの行動圏内です",                           safety: null },
+  5:  { level: "sprout",    reason: "いつもの箱根を少し深掘り。アート好きなあなたに新体験を",               safety: "箱根訪問歴あり。いつものドライブ圏内で安心です" },
+  6:  { level: "sprout",    reason: "グルメ好きなあなたに、温泉×グルメの新しい組み合わせ",                 safety: "箱根エリアは訪問歴あり。日帰りで気軽に行けます" },
+  7:  { level: "sprout",    reason: "グルメの幅を広げよう！本格中華で新しい味覚体験",                       safety: "藤沢から40分。いつもの移動距離の範囲内です" },
+  8:  { level: "rocket",    reason: "新しいジャンルに挑戦！デジタルアートで視野を広げませんか？",           safety: "事前予約で待ち時間なし。お子様も楽しめる施設です" },
+  9:  { level: "rocket",    reason: "行動範囲を広げるチャンス！富士山を望む新エリアへ",                     safety: "箱根の先30分。帰りに箱根温泉に寄れるルートです" },
+  10: { level: "sprout",    reason: "鎌倉方面をもう少し先へ。アウトドア体験で新鮮な休日を",               safety: "鎌倉から30分先。海沿いのドライブが気持ちいいルート" },
+  11: { level: "home",      reason: "いつもの湘南エリア。お子様連れに安心の施設です",                       safety: null },
+  12: { level: "sprout",    reason: "移動圏内のキッズスポット。新しい遊び体験を発見",                      safety: "藤沢から45分。広い駐車場完備で車でのアクセス楽々" },
+};
+
+// ===== 最新情報モックデータ（各8件） =====
+const NEWS_DATA = {
+  1: [
+    { title: "茅ヶ崎サザンビーチで早朝ヨガイベント開催！参加無料", source: "湘南経済新聞", date: "2日前", image: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400&h=225&fit=crop", isNew: true, seasonTag: null },
+    { title: "サザンビーチ近くの新カフェが話題 海を見ながらモーニング", source: "湘南スタイル", date: "5日前", image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=225&fit=crop", isNew: true, seasonTag: null },
+    { title: "茅ヶ崎花火大会の日程が発表 今年は規模拡大", source: "湘南経済新聞", date: "1週間前", image: "https://images.unsplash.com/photo-1498931299472-f7a63a5a1cfa?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "サザンビーチでビーチクリーンイベント 親子で参加OK", source: "茅ヶ崎市公式", date: "1週間前", image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "湘南の海辺ランニングコース特集 サザンビーチ編", source: "RUN+", date: "10日前", image: "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "烏帽子岩を望む絶景カフェ3選", source: "湘南スタイル", date: "2週間前", image: "https://images.unsplash.com/photo-1442512595331-e89e73853f31?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "茅ヶ崎・海沿いサイクリングロードが整備完了", source: "茅ヶ崎市公式", date: "2週間前", image: "https://images.unsplash.com/photo-1541625602330-2277a4c46182?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "春の湘南ビーチウォーキング おすすめコース紹介", source: "おでかけマガジン", date: "3週間前", image: "https://images.unsplash.com/photo-1473496169904-658ba7c44d8a?w=400&h=225&fit=crop", isNew: false, seasonTag: "🌸 春限定" },
+  ],
+  2: [
+    { title: "湘南T-SITEに新カフェオープン！地元食材使用のランチメニュー", source: "湘南経済新聞", date: "2日前", image: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=400&h=225&fit=crop", isNew: true, seasonTag: null },
+    { title: "週末限定マルシェ開催中 地元作家の雑貨が人気", source: "湘南スタイル", date: "4日前", image: "https://images.unsplash.com/photo-1533900298318-6b8da08a523e?w=400&h=225&fit=crop", isNew: false, seasonTag: "🌸 春限定" },
+    { title: "蔦屋書店で「湘南の暮らし」写真展 3月末まで", source: "TSITE公式", date: "1週間前", image: "https://images.unsplash.com/photo-1507842217343-583bb7270b66?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "T-SITE限定 春のブックフェア開催中", source: "TSITE公式", date: "1週間前", image: "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=400&h=225&fit=crop", isNew: false, seasonTag: "🌸 春限定" },
+    { title: "湘南T-SITEのおすすめランチ5選 編集部が実食", source: "湘南スタイル", date: "10日前", image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "親子で楽しむT-SITEのワークショップまとめ", source: "湘南経済新聞", date: "2週間前", image: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "辻堂エリアの駐車場事情 T-SITE周辺の穴場は？", source: "湘南ドライブ", date: "2週間前", image: "https://images.unsplash.com/photo-1506521781263-d8422e82f27a?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "湘南T-SITE 3号館リニューアルで新店舗続々", source: "TSITE公式", date: "3週間前", image: "https://images.unsplash.com/photo-1521017432531-fbd92d768814?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+  ],
+  3: [
+    { title: "報国寺の竹林ライトアップイベント 3月末まで開催", source: "鎌倉経済新聞", date: "3日前", image: "https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=400&h=225&fit=crop", isNew: true, seasonTag: "🌸 春限定" },
+    { title: "竹の庭でお抹茶体験 予約なしでもOK", source: "鎌倉観光ガイド", date: "1週間前", image: "https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "報国寺住職に聞く 竹林の四季の楽しみ方", source: "鎌倉経済新聞", date: "1週間前", image: "https://images.unsplash.com/photo-1528164344705-47542687000d?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "鎌倉・浄明寺エリアのおすすめ散策コース", source: "鎌倉観光ガイド", date: "10日前", image: "https://images.unsplash.com/photo-1480796927426-f609979314bd?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "報国寺の抹茶が美味しい理由 茶師こだわりの一杯", source: "和カフェ通信", date: "2週間前", image: "https://images.unsplash.com/photo-1515823064-d6e0c04616a7?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "竹林撮影のコツ プロカメラマンが教える構図術", source: "カメラ日和", date: "2週間前", image: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "鎌倉の隠れ寺巡り 報国寺から杉本寺へ", source: "鎌倉観光ガイド", date: "3週間前", image: "https://images.unsplash.com/photo-1478436127897-769e1b3f0f36?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "外国人観光客に人気の鎌倉スポットTOP5", source: "JAPAN GUIDE", date: "3週間前", image: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+  ],
+  4: [
+    { title: "小町通りに新しいしらすスイーツ専門店がオープン", source: "鎌倉経済新聞", date: "1日前", image: "https://images.unsplash.com/photo-1551024506-0bccd828d307?w=400&h=225&fit=crop", isNew: true, seasonTag: null },
+    { title: "鎌倉食べ歩きマップ2026年版が配布中", source: "鎌倉観光ガイド", date: "3日前", image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=225&fit=crop", isNew: true, seasonTag: null },
+    { title: "小町通り 春のスイーツフェア開催 20店舗参加", source: "鎌倉経済新聞", date: "5日前", image: "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400&h=225&fit=crop", isNew: true, seasonTag: "🌸 春限定" },
+    { title: "行列必至！小町通りの新しい抹茶ジェラート店", source: "食べログマガジン", date: "1週間前", image: "https://images.unsplash.com/photo-1501443762994-82bd5dace89a?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "鎌倉野菜を使った新ランチスポット3選", source: "鎌倉経済新聞", date: "10日前", image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "小町通りの混雑を避ける裏技 地元民が教えます", source: "鎌倉観光ガイド", date: "2週間前", image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "鎌倉グルメの新定番 しらすパンケーキが話題", source: "食べログマガジン", date: "2週間前", image: "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "鶴岡八幡宮の桜が開花 参道の食べ歩きと合わせて", source: "鎌倉経済新聞", date: "3週間前", image: "https://images.unsplash.com/photo-1522383225653-ed111181a951?w=400&h=225&fit=crop", isNew: false, seasonTag: "🌸 春限定" },
+  ],
+  5: [
+    { title: "新企画展スタート 現代アート×自然のコラボ", source: "美術手帖", date: "3日前", image: "https://images.unsplash.com/photo-1561839561-b13bcfe95249?w=400&h=225&fit=crop", isNew: true, seasonTag: null },
+    { title: "足湯×アート鑑賞 寒い季節におすすめの過ごし方", source: "おでかけマガジン", date: "5日前", image: "https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=400&h=225&fit=crop", isNew: false, seasonTag: "❄️ 冬限定" },
+    { title: "ピカソ館リニューアル記念 入館料割引キャンペーン", source: "箱根ナビ", date: "1週間前", image: "https://images.unsplash.com/photo-1577083552431-6e5fd01988ec?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "彫刻の森美術館で子どもアートワークショップ開催", source: "箱根ナビ", date: "10日前", image: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "ステンドグラスの塔 撮影テクニック特集", source: "カメラ日和", date: "2週間前", image: "https://images.unsplash.com/photo-1544967082-d9d25d867d66?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "箱根アートめぐり 彫刻の森からポーラ美術館へ", source: "美術手帖", date: "2週間前", image: "https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "彫刻の森美術館 春の庭園ガイドツアーがスタート", source: "箱根ナビ", date: "3週間前", image: "https://images.unsplash.com/photo-1561839561-b13bcfe95249?w=400&h=225&fit=crop", isNew: false, seasonTag: "🌸 春限定" },
+    { title: "箱根フリーパスで美術館巡り 最もお得なルートは？", source: "おでかけマガジン", date: "3週間前", image: "https://images.unsplash.com/photo-1577083552431-6e5fd01988ec?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+  ],
+  6: [
+    { title: "箱根湯本の新日帰り温泉がオープン 絶景露天が話題", source: "箱根ナビ", date: "2日前", image: "https://images.unsplash.com/photo-1540541338287-41700207dee6?w=400&h=225&fit=crop", isNew: true, seasonTag: null },
+    { title: "冬の箱根を満喫 温泉×グルメのおすすめコース", source: "おでかけマガジン", date: "6日前", image: "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=400&h=225&fit=crop", isNew: false, seasonTag: "❄️ 冬限定" },
+    { title: "箱根湯本駅前に新しい足湯カフェがオープン", source: "箱根ナビ", date: "1週間前", image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "日帰り温泉ランキング 箱根エリアTOP10", source: "温泉ぱらだいす", date: "10日前", image: "https://images.unsplash.com/photo-1540541338287-41700207dee6?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "箱根の日帰り温泉 カップル向けプランまとめ", source: "おでかけマガジン", date: "2週間前", image: "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "箱根湯本 ランチが美味しい温泉宿5選", source: "食べログマガジン", date: "2週間前", image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "源泉かけ流しの日帰り温泉 箱根で3軒だけ", source: "温泉ぱらだいす", date: "3週間前", image: "https://images.unsplash.com/photo-1540541338287-41700207dee6?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "箱根の春を楽しむ 温泉×桜のベストスポット", source: "箱根ナビ", date: "3週間前", image: "https://images.unsplash.com/photo-1522383225653-ed111181a951?w=400&h=225&fit=crop", isNew: false, seasonTag: "🌸 春限定" },
+  ],
+  7: [
+    { title: "中華街で春の食べ放題フェア開催 50店舗以上が参加", source: "横浜経済新聞", date: "1日前", image: "https://images.unsplash.com/photo-1525755662778-989d0524087e?w=400&h=225&fit=crop", isNew: true, seasonTag: "🌸 春限定" },
+    { title: "横浜中華街の行列ができる小籠包店ベスト5", source: "食べログマガジン", date: "4日前", image: "https://images.unsplash.com/photo-1496116218417-1a781b1c416c?w=400&h=225&fit=crop", isNew: true, seasonTag: null },
+    { title: "中華街で人気の食べ歩きグルメ最新ランキング", source: "横浜経済新聞", date: "1週間前", image: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "横浜中華街 子連れで楽しむ完全ガイド", source: "おでかけマガジン", date: "10日前", image: "https://images.unsplash.com/photo-1525755662778-989d0524087e?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "中華街の穴場カフェ 中国茶を楽しむ大人の時間", source: "横浜経済新聞", date: "2週間前", image: "https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "横浜媽祖廟で春の特別祈祷 家族の健康祈願", source: "横浜経済新聞", date: "2週間前", image: "https://images.unsplash.com/photo-1480796927426-f609979314bd?w=400&h=225&fit=crop", isNew: false, seasonTag: "🌸 春限定" },
+    { title: "中華街周辺の駐車場ガイド 安い&近い順", source: "横浜ドライブ", date: "3週間前", image: "https://images.unsplash.com/photo-1506521781263-d8422e82f27a?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "中華街×山下公園 半日で楽しむモデルコース", source: "おでかけマガジン", date: "3週間前", image: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+  ],
+  8: [
+    { title: "チームラボ ボーダレスに春限定の桜アートが登場", source: "美術手帖", date: "2日前", image: "https://images.unsplash.com/photo-1549490349-8643362247b5?w=400&h=225&fit=crop", isNew: true, seasonTag: "🌸 春限定" },
+    { title: "デジタルアートで没入体験 冬のおすすめ屋内スポット", source: "おでかけマガジン", date: "1週間前", image: "https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "チームラボ 新エリア「光の彫刻空間」が公開", source: "美術手帖", date: "1週間前", image: "https://images.unsplash.com/photo-1549490349-8643362247b5?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "子ども連れチームラボ攻略法 効率よく回るコツ", source: "おでかけマガジン", date: "10日前", image: "https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "チームラボの映えスポットBEST10 撮り方解説付き", source: "カメラ日和", date: "2週間前", image: "https://images.unsplash.com/photo-1549490349-8643362247b5?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "お台場エリア 食事もアートも楽しむ1日プラン", source: "おでかけマガジン", date: "2週間前", image: "https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "夜のチームラボ デートにおすすめの時間帯は？", source: "デートプランナー", date: "3週間前", image: "https://images.unsplash.com/photo-1549490349-8643362247b5?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "チームラボ×周辺グルメ お台場の新レストラン情報", source: "食べログマガジン", date: "3週間前", image: "https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+  ],
+  9: [
+    { title: "御殿場アウトレットで最大80%OFF スプリングセール開催中", source: "ファッションプレス", date: "1日前", image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=400&h=225&fit=crop", isNew: true, seasonTag: "🌸 春限定" },
+    { title: "富士山×ショッピング 御殿場の新フードコートが人気", source: "おでかけマガジン", date: "5日前", image: "https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?w=400&h=225&fit=crop", isNew: true, seasonTag: null },
+    { title: "御殿場アウトレット 2026年春の注目ブランドまとめ", source: "ファッションプレス", date: "1週間前", image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "御殿場高原ビールの新作 春限定フレーバー登場", source: "御殿場タイムス", date: "10日前", image: "https://images.unsplash.com/photo-1535958636474-b021ee887b13?w=400&h=225&fit=crop", isNew: false, seasonTag: "🌸 春限定" },
+    { title: "箱根×御殿場 1泊2日のおすすめドライブコース", source: "おでかけマガジン", date: "2週間前", image: "https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "御殿場アウトレット 効率的に回る裏技マップ", source: "ファッションプレス", date: "2週間前", image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "富士山が見える絶景レストラン 御殿場エリア5選", source: "食べログマガジン", date: "3週間前", image: "https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "御殿場プレミアム・アウトレット 子連れ攻略ガイド", source: "おでかけマガジン", date: "3週間前", image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+  ],
+  10: [
+    { title: "三浦海岸の河津桜が見頃 BBQと花見を同時に楽しめる", source: "三浦プレス", date: "1日前", image: "https://images.unsplash.com/photo-1522383225653-ed111181a951?w=400&h=225&fit=crop", isNew: true, seasonTag: "🌸 春限定" },
+    { title: "三浦みかん狩りシーズン到来 家族連れに人気", source: "おでかけマガジン", date: "3日前", image: "https://images.unsplash.com/photo-1547514701-42782101795e?w=400&h=225&fit=crop", isNew: true, seasonTag: null },
+    { title: "三崎まぐろ祭り開催 新鮮まぐろ丼が500円から", source: "三浦プレス", date: "5日前", image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=225&fit=crop", isNew: true, seasonTag: null },
+    { title: "三浦海岸BBQスポット 予約不要の穴場3選", source: "おでかけマガジン", date: "1週間前", image: "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "三浦半島ドライブ 海沿いの絶景ルートガイド", source: "ドライブナビ", date: "10日前", image: "https://images.unsplash.com/photo-1473496169904-658ba7c44d8a?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "三浦の農園体験 いちご狩り＆みかん狩り比較", source: "おでかけマガジン", date: "2週間前", image: "https://images.unsplash.com/photo-1547514701-42782101795e?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "三浦海岸 子ども連れで安心して遊べるビーチガイド", source: "三浦プレス", date: "2週間前", image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "三崎港グルメ散歩 まぐろだけじゃない穴場店", source: "食べログマガジン", date: "3週間前", image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+  ],
+  11: [
+    { title: "えのすいで春の特別展「深海のふしぎ」がスタート", source: "湘南経済新聞", date: "2日前", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=225&fit=crop", isNew: true, seasonTag: "🌸 春限定" },
+    { title: "新江ノ島水族館×ナイトアクアリウム 夜の水族館が幻想的", source: "おでかけマガジン", date: "6日前", image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "えのすい新コーナー「クラゲファンタジーホール」公開", source: "湘南経済新聞", date: "1週間前", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "イルカショーが進化！新プログラム「WAVE」が好評", source: "おでかけマガジン", date: "10日前", image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "えのすい×江ノ島 半日で楽しむモデルコース", source: "湘南スタイル", date: "2週間前", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "子連れえのすい完全攻略 ベビーカーOKエリアまとめ", source: "おでかけマガジン", date: "2週間前", image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "えのすい年間パスポートがリニューアル 特典が充実", source: "湘南経済新聞", date: "3週間前", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "江ノ島周辺の駐車場事情 混雑を避けるコツ", source: "湘南ドライブ", date: "3週間前", image: "https://images.unsplash.com/photo-1506521781263-d8422e82f27a?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+  ],
+  12: [
+    { title: "こどもの国で春の動物ふれあいフェスタ開催", source: "横浜経済新聞", date: "3日前", image: "https://images.unsplash.com/photo-1566454544259-f4b94c3d758c?w=400&h=225&fit=crop", isNew: true, seasonTag: "🌸 春限定" },
+    { title: "家族で楽しむ横浜近郊の遊び場ランキング2026", source: "おでかけマガジン", date: "1週間前", image: "https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "こどもの国 新アスレチックエリアがオープン", source: "横浜経済新聞", date: "1週間前", image: "https://images.unsplash.com/photo-1566454544259-f4b94c3d758c?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "ポニー乗馬体験レポ 何歳から楽しめる？", source: "おでかけマガジン", date: "10日前", image: "https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "こどもの国の手ぶらBBQ 予約方法と注意点", source: "横浜経済新聞", date: "2週間前", image: "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "こどもの国 雨の日でも楽しめる屋内施設ガイド", source: "おでかけマガジン", date: "2週間前", image: "https://images.unsplash.com/photo-1566454544259-f4b94c3d758c?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "横浜の大型公園比較 こどもの国vsこども自然公園", source: "横浜経済新聞", date: "3週間前", image: "https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+    { title: "こどもの国周辺ランチ 子連れOKのお店5選", source: "食べログマガジン", date: "3週間前", image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=225&fit=crop", isNew: false, seasonTag: null },
+  ],
+};
+
+// ===== ルートデータ（SVG地図用） =====
+// 各ルートは藤沢市起点。座標系は viewBox 0 0 400 210
+const ROUTE_DATA = {
+  1: { // 茅ヶ崎サザンビーチ（海沿い西方向）
+    distance: "10km", time: "15分",
+    start: {x:105, y:95, label:"藤沢"},
+    end: {x:295, y:115, label:"茅ヶ崎"},
+    route: "M105,95 C140,100 180,108 220,112 Q255,115 295,115",
+    waypoints: [{x:200, y:110, label:"辻堂"}],
+    landmarks: [{x:60,y:55,label:"横浜駅",size:"s"},{x:155,y:60,label:"大船",size:"s"},{x:320,y:80,label:"平塚",size:"s"}],
+    sea: "M0,145 Q60,135 120,140 Q200,148 280,142 Q350,138 400,145 L400,210 L0,210 Z",
+    coastLine: "M0,140 Q60,130 120,135 Q200,143 280,137 Q350,133 400,140",
+    parks: [{x:250,y:90,w:20,h:12},{x:70,y:75,w:15,h:10}],
+    rivers: ["M155,40 Q160,70 158,100 Q156,125 160,145"],
+    roads: [
+      "M0,95 Q100,92 200,100 Q300,108 400,112", // R134
+      "M0,65 Q100,62 200,68 Q300,72 400,75",     // R1
+      "M90,30 L90,145",                            // 縦道路
+      "M250,30 L250,145",                          // 縦道路
+    ],
+    roadLabels: [{x:350,y:88,label:"R134"},{x:350,y:62,label:"R1"}],
+  },
+  2: { // 湘南T-SITE（辻堂方面）
+    distance: "14km", time: "20分",
+    start: {x:95, y:90, label:"藤沢"},
+    end: {x:260, y:100, label:"湘南T-SITE"},
+    route: "M95,90 C130,92 170,96 210,98 Q240,100 260,100",
+    waypoints: [{x:175, y:96, label:"辻堂駅"}],
+    landmarks: [{x:55,y:50,label:"横浜駅",size:"s"},{x:140,y:55,label:"大船",size:"s"},{x:330,y:100,label:"茅ヶ崎",size:"s"}],
+    sea: "M0,148 Q80,140 160,144 Q260,150 340,146 Q380,143 400,148 L400,210 L0,210 Z",
+    coastLine: "M0,143 Q80,135 160,139 Q260,145 340,141 Q380,138 400,143",
+    parks: [{x:235,y:85,w:18,h:10},{x:70,y:70,w:14,h:9}],
+    rivers: ["M145,30 Q150,65 148,100 Q146,128 150,148"],
+    roads: [
+      "M0,90 Q100,88 200,94 Q300,100 400,105",
+      "M0,60 Q100,58 200,62 Q300,66 400,70",
+      "M85,25 L85,148",
+      "M230,25 L230,148",
+    ],
+    roadLabels: [{x:350,y:82,label:"R134"},{x:350,y:57,label:"R1"}],
+  },
+  3: { // 報国寺（鎌倉方面・東方向）
+    distance: "18km", time: "25分",
+    start: {x:100, y:100, label:"藤沢"},
+    end: {x:310, y:78, label:"報国寺"},
+    route: "M100,100 C140,98 180,92 220,88 Q260,82 290,80 Q300,79 310,78",
+    waypoints: [{x:210, y:88, label:"鎌倉駅"}],
+    landmarks: [{x:55,y:55,label:"大船",size:"s"},{x:280,y:60,label:"鶴岡八幡宮",size:"s"},{x:350,y:100,label:"逗子",size:"s"}],
+    sea: "M0,155 Q80,148 180,152 Q280,158 350,150 Q380,147 400,152 L400,210 L0,210 Z",
+    coastLine: "M0,150 Q80,143 180,147 Q280,153 350,145 Q380,142 400,147",
+    parks: [{x:260,y:65,w:22,h:14},{x:150,y:70,w:16,h:10},{x:330,y:55,w:18,h:12}],
+    rivers: ["M140,25 Q145,55 142,90 Q140,120 145,155"],
+    roads: [
+      "M0,100 Q80,96 160,92 Q260,84 400,78",
+      "M0,65 Q100,60 200,58 Q300,55 400,52",
+      "M80,25 L80,155",
+      "M240,25 L240,155",
+    ],
+    roadLabels: [{x:350,y:71,label:"R134"},{x:350,y:46,label:"R21"}],
+  },
+  4: { // 小町通り（鎌倉）
+    distance: "18km", time: "25分",
+    start: {x:100, y:100, label:"藤沢"},
+    end: {x:300, y:80, label:"小町通り"},
+    route: "M100,100 C140,97 180,93 220,88 Q260,83 300,80",
+    waypoints: [{x:200, y:90, label:"鎌倉駅"}],
+    landmarks: [{x:55,y:55,label:"大船",size:"s"},{x:280,y:62,label:"鶴岡八幡宮",size:"s"},{x:340,y:105,label:"逗子",size:"s"}],
+    sea: "M0,155 Q80,148 180,152 Q280,158 350,150 Q380,147 400,152 L400,210 L0,210 Z",
+    coastLine: "M0,150 Q80,143 180,147 Q280,153 350,145 Q380,142 400,147",
+    parks: [{x:260,y:65,w:22,h:14},{x:140,y:72,w:16,h:10}],
+    rivers: ["M140,25 Q145,55 142,90 Q140,120 145,155"],
+    roads: [
+      "M0,100 Q80,96 160,92 Q260,84 400,78",
+      "M0,65 Q100,60 200,58 Q300,55 400,52",
+      "M80,25 L80,155",
+      "M240,25 L240,155",
+    ],
+    roadLabels: [{x:350,y:71,label:"R134"},{x:350,y:46,label:"R21"}],
+  },
+  5: { // 箱根彫刻の森（西方向・山方面）
+    distance: "52km", time: "60分",
+    start: {x:60, y:110, label:"藤沢"},
+    end: {x:350, y:58, label:"彫刻の森"},
+    route: "M60,110 C100,108 130,105 170,100 Q210,92 250,82 C280,74 310,66 350,58",
+    waypoints: [{x:170, y:100, label:"小田原"},{x:280, y:72, label:"箱根湯本"}],
+    landmarks: [{x:30,y:70,label:"平塚",size:"s"},{x:120,y:80,label:"大磯",size:"s"},{x:350,y:40,label:"芦ノ湖",size:"s"}],
+    sea: "M0,152 Q60,148 120,155 Q180,160 220,155 L220,210 L0,210 Z",
+    coastLine: "M0,147 Q60,143 120,150 Q180,155 220,150",
+    parks: [{x:300,y:45,w:30,h:20},{x:330,y:65,w:20,h:14},{x:260,y:55,w:18,h:12}],
+    rivers: ["M200,25 Q195,60 198,90 Q200,120 195,155"],
+    roads: [
+      "M0,110 Q80,106 160,100 Q240,88 330,70 L400,58",
+      "M0,80 Q100,76 200,72 Q300,66 400,60",
+      "M100,25 L100,155",
+      "M280,25 L280,155",
+    ],
+    roadLabels: [{x:15,y:105,label:"R1"},{x:15,y:75,label:"小田厚"}],
+    mountain: [{x:310,y:30,w:60,h:35},{x:260,y:38,w:40,h:25},{x:350,y:42,w:45,h:28}],
+  },
+  6: { // 箱根温泉
+    distance: "55km", time: "65分",
+    start: {x:60, y:110, label:"藤沢"},
+    end: {x:330, y:68, label:"箱根湯本"},
+    route: "M60,110 C100,108 130,105 170,100 Q210,92 260,82 C290,76 310,72 330,68",
+    waypoints: [{x:170, y:100, label:"小田原"}],
+    landmarks: [{x:30,y:70,label:"平塚",size:"s"},{x:120,y:80,label:"大磯",size:"s"},{x:360,y:50,label:"芦ノ湖",size:"s"}],
+    sea: "M0,152 Q60,148 120,155 Q180,160 220,155 L220,210 L0,210 Z",
+    coastLine: "M0,147 Q60,143 120,150 Q180,155 220,150",
+    parks: [{x:300,y:45,w:30,h:20},{x:340,y:58,w:20,h:14}],
+    rivers: ["M200,25 Q195,60 198,90 Q200,120 195,155"],
+    roads: [
+      "M0,110 Q80,106 160,100 Q240,88 330,70 L400,58",
+      "M0,80 Q100,76 200,72 Q300,66 400,60",
+      "M100,25 L100,155",
+      "M280,25 L280,155",
+    ],
+    roadLabels: [{x:15,y:105,label:"R1"},{x:15,y:75,label:"小田厚"}],
+    mountain: [{x:310,y:30,w:60,h:35},{x:270,y:40,w:40,h:25},{x:355,y:38,w:40,h:28}],
+  },
+  7: { // 横浜中華街（北東方向）
+    distance: "28km", time: "40分",
+    start: {x:95, y:120, label:"藤沢"},
+    end: {x:320, y:60, label:"中華街"},
+    route: "M95,120 C120,115 150,105 180,95 Q220,82 260,72 C290,66 310,62 320,60",
+    waypoints: [{x:220, y:80, label:"横浜駅"}],
+    landmarks: [{x:140,y:80,label:"戸塚",size:"s"},{x:280,y:50,label:"みなとみらい",size:"s"},{x:360,y:75,label:"本牧",size:"s"}],
+    sea: "M240,130 Q280,125 320,135 Q360,140 400,132 L400,210 L240,210 Z",
+    coastLine: "M240,125 Q280,120 320,130 Q360,135 400,127",
+    parks: [{x:270,y:55,w:16,h:10},{x:110,y:100,w:14,h:9}],
+    rivers: ["M300,25 Q305,50 302,80 Q300,110 305,135"],
+    roads: [
+      "M0,120 Q80,112 160,100 Q260,80 400,55",
+      "M0,88 Q100,82 200,76 Q300,68 400,60",
+      "M150,25 L150,155",
+      "M300,25 L300,155",
+    ],
+    roadLabels: [{x:15,y:115,label:"R1"},{x:15,y:83,label:"横横道"}],
+  },
+  8: { // チームラボ ボーダレス（お台場方面）
+    distance: "38km", time: "50分",
+    start: {x:70, y:130, label:"藤沢"},
+    end: {x:345, y:55, label:"お台場"},
+    route: "M70,130 C100,125 140,112 180,100 Q220,88 270,74 C300,66 330,58 345,55",
+    waypoints: [{x:200, y:92, label:"横浜駅"},{x:290, y:66, label:"羽田"}],
+    landmarks: [{x:120,y:95,label:"戸塚",size:"s"},{x:355,y:40,label:"東京湾",size:"s"}],
+    sea: "M260,120 Q300,112 340,118 Q370,122 400,115 L400,210 L260,210 Z",
+    coastLine: "M260,115 Q300,107 340,113 Q370,117 400,110",
+    parks: [{x:320,y:48,w:18,h:10},{x:90,y:108,w:14,h:9}],
+    rivers: ["M280,25 Q285,55 282,85 Q280,105 285,125"],
+    roads: [
+      "M0,130 Q80,118 180,100 Q280,78 400,50",
+      "M0,95 Q100,88 200,80 Q300,70 400,58",
+      "M140,25 L140,160",
+      "M290,25 L290,160",
+    ],
+    roadLabels: [{x:15,y:125,label:"R1"},{x:15,y:90,label:"第三京浜"}],
+  },
+  9: { // 御殿場アウトレット（西方向遠方・山）
+    distance: "85km", time: "90分",
+    start: {x:40, y:120, label:"藤沢"},
+    end: {x:365, y:45, label:"御殿場"},
+    route: "M40,120 C75,116 110,108 150,100 Q200,88 250,76 C290,66 330,54 365,45",
+    waypoints: [{x:150, y:100, label:"小田原"},{x:270, y:70, label:"箱根"}],
+    landmarks: [{x:80,y:90,label:"平塚",size:"s"},{x:350,y:28,label:"🗻富士山",size:"m"}],
+    sea: "M0,155 Q50,150 100,158 Q140,162 170,158 L170,210 L0,210 Z",
+    coastLine: "M0,150 Q50,145 100,153 Q140,157 170,153",
+    parks: [{x:280,y:50,w:25,h:16},{x:330,y:35,w:20,h:14}],
+    rivers: ["M170,25 Q165,60 168,90 Q170,120 165,158"],
+    roads: [
+      "M0,120 Q80,110 180,96 Q280,76 400,45",
+      "M0,90 Q100,82 200,74 Q300,60 400,42",
+      "M100,25 L100,160",
+      "M260,25 L260,160",
+    ],
+    roadLabels: [{x:15,y:115,label:"R1"},{x:15,y:85,label:"東名"}],
+    mountain: [{x:320,y:18,w:55,h:35},{x:280,y:35,w:40,h:28},{x:360,y:28,w:35,h:25}],
+  },
+  10: { // 三浦海岸（南東方向・海沿い）
+    distance: "42km", time: "55分",
+    start: {x:80, y:60, label:"藤沢"},
+    end: {x:330, y:135, label:"三浦海岸"},
+    route: "M80,60 C110,65 150,72 190,82 Q230,92 270,108 C300,118 320,128 330,135",
+    waypoints: [{x:200, y:85, label:"逗子"},{x:270, y:110, label:"横須賀"}],
+    landmarks: [{x:130,y:55,label:"鎌倉",size:"s"},{x:355,y:150,label:"三崎港",size:"s"}],
+    sea: "M180,140 Q230,130 280,145 Q330,155 380,148 Q400,145 400,210 L180,210 Z",
+    coastLine: "M180,135 Q230,125 280,140 Q330,150 380,143 L400,140",
+    parks: [{x:120,y:45,w:16,h:10},{x:280,y:120,w:14,h:9}],
+    rivers: ["M160,25 Q165,50 162,80 Q160,110 165,140"],
+    roads: [
+      "M0,60 Q80,62 160,72 Q260,92 400,140",
+      "M0,38 Q100,40 200,48 Q300,60 400,80",
+      "M120,25 L120,155",
+      "M270,25 L270,155",
+    ],
+    roadLabels: [{x:15,y:55,label:"R134"},{x:15,y:33,label:"横横道"}],
+  },
+  11: { // 新江ノ島水族館（すぐ近く）
+    distance: "10km", time: "15分",
+    start: {x:120, y:85, label:"藤沢"},
+    end: {x:280, y:105, label:"えのすい"},
+    route: "M120,85 C150,88 190,94 230,100 Q260,104 280,105",
+    waypoints: [],
+    landmarks: [{x:300,y:85,label:"江ノ島",size:"s"},{x:55,y:50,label:"大船",size:"s"},{x:350,y:100,label:"茅ヶ崎",size:"s"}],
+    sea: "M0,145 Q80,138 160,142 Q260,148 340,140 Q380,137 400,142 L400,210 L0,210 Z",
+    coastLine: "M0,140 Q80,133 160,137 Q260,143 340,135 Q380,132 400,137",
+    parks: [{x:260,y:90,w:18,h:12},{x:80,y:68,w:14,h:9}],
+    rivers: ["M155,25 Q160,55 158,85 Q156,115 160,145"],
+    roads: [
+      "M0,90 Q100,88 200,95 Q300,102 400,108",
+      "M0,58 Q100,55 200,60 Q300,64 400,68",
+      "M90,25 L90,145",
+      "M250,25 L250,145",
+    ],
+    roadLabels: [{x:350,y:84,label:"R134"},{x:350,y:55,label:"R1"}],
+  },
+  12: { // こどもの国（北方向）
+    distance: "35km", time: "45分",
+    start: {x:95, y:145, label:"藤沢"},
+    end: {x:310, y:45, label:"こどもの国"},
+    route: "M95,145 C115,135 140,118 170,105 Q210,88 250,70 C280,58 300,50 310,45",
+    waypoints: [{x:195, y:92, label:"横浜駅"}],
+    landmarks: [{x:130,y:110,label:"戸塚",size:"s"},{x:260,y:58,label:"青葉台",size:"s"},{x:350,y:55,label:"町田",size:"s"}],
+    sea: "M0,175 Q60,172 120,178 Q160,182 180,178 L180,210 L0,210 Z",
+    coastLine: "M0,170 Q60,167 120,173 Q160,177 180,173",
+    parks: [{x:290,y:35,w:25,h:16},{x:80,y:125,w:14,h:9}],
+    rivers: ["M230,25 Q235,60 232,95 Q230,125 235,160"],
+    roads: [
+      "M0,145 Q80,130 180,105 Q280,68 400,35",
+      "M0,115 Q100,105 200,88 Q300,65 400,45",
+      "M130,25 L130,170",
+      "M280,25 L280,170",
+    ],
+    roadLabels: [{x:15,y:140,label:"R1"},{x:15,y:110,label:"R246"}],
+  },
+};
+
+// ===== パーソナライズ理由データ =====
+const PERSONALIZED_REASONS = {
+  1:  { prefMatch: ["nature"], visitArea: "茅ヶ崎", visitCount: 3, kidFriendly: false, matchScore: 92 },
+  2:  { prefMatch: ["gourmet","shopping"], visitArea: "茅ヶ崎", visitCount: 3, kidFriendly: false, matchScore: 88 },
+  3:  { prefMatch: ["nature","art"], visitArea: "鎌倉", visitCount: 2, kidFriendly: false, matchScore: 95 },
+  4:  { prefMatch: ["gourmet"], visitArea: "鎌倉", visitCount: 2, kidFriendly: false, matchScore: 85 },
+  5:  { prefMatch: ["art","nature"], visitArea: "箱根", visitCount: 1, kidFriendly: true, matchScore: 90 },
+  6:  { prefMatch: ["gourmet","nature"], visitArea: "箱根", visitCount: 1, kidFriendly: false, matchScore: 82 },
+  7:  { prefMatch: ["gourmet"], visitArea: null, visitCount: 0, kidFriendly: false, matchScore: 78 },
+  8:  { prefMatch: ["art"], visitArea: null, visitCount: 0, kidFriendly: true, matchScore: 86 },
+  9:  { prefMatch: ["shopping"], visitArea: null, visitCount: 0, kidFriendly: false, matchScore: 72 },
+  10: { prefMatch: ["active","nature"], visitArea: "鎌倉", visitCount: 2, kidFriendly: true, matchScore: 80 },
+  11: { prefMatch: ["nature"], visitArea: "江ノ島", visitCount: 1, kidFriendly: true, matchScore: 94 },
+  12: { prefMatch: ["active"], visitArea: null, visitCount: 0, kidFriendly: true, matchScore: 88 },
+};
+
+// ===== 口コミモックデータ =====
+// badges: family=家族構成, pref=好み, area=エリア
+const REVIEWS_DATA = {
+  1: [
+    { name: "Mさん", initial: "M", color: "#7cb9e8", stars: 5, date: "1週間前に訪問", text: "朝7時に着いたら貸切状態！サーファーを眺めながら散歩して、帰りにモーニングカフェに寄りました。週末の朝活にぴったりです。", badges: [{type:"pref",label:"🌿 自然好き"},{type:"area",label:"📍 藤沢市在住"}], helpful: 24 },
+    { name: "田中さん", initial: "田", color: "#f0a1c2", stars: 4, date: "2週間前に訪問", text: "5歳の息子と砂遊びをしたり貝殻を拾ったり。駐車場も広くて車で行きやすいです。夕暮れ時の景色が最高でした！", badges: [{type:"family",label:"🏠 小さいお子様あり"},{type:"area",label:"📍 茅ヶ崎周辺"}], helpful: 18 },
+    { name: "Sさん", initial: "S", color: "#a8d8b9", stars: 5, date: "3週間前に訪問", text: "カップルでサンセット散歩。烏帽子岩のシルエットが本当に綺麗で、何度来ても感動します。近くのレストランでディナーもおすすめ。", badges: [{type:"family",label:"👫 カップル"},{type:"pref",label:"🌿 自然好き"}], helpful: 31 },
+    { name: "Kさん", initial: "K", color: "#c4b5e0", stars: 4, date: "1ヶ月前に訪問", text: "ランニングコースとして最高。海風が気持ちよくて、5kmあっという間でした。シャワー施設があればもっと良いかな。", badges: [{type:"pref",label:"⚽ アクティブ"},{type:"area",label:"📍 藤沢市在住"}], helpful: 12 },
+  ],
+  2: [
+    { name: "Yさん", initial: "Y", color: "#f0a1c2", stars: 5, date: "3日前に訪問", text: "3歳の娘と行きました。キッズスペースが充実していて、親はゆっくりカフェタイム。授乳室もきれいでした！絵本コーナーも最高です。", badges: [{type:"family",label:"🏠 小さいお子様あり"},{type:"pref",label:"🍽 グルメ好き"}], helpful: 42 },
+    { name: "佐藤さん", initial: "佐", color: "#a8d8b9", stars: 5, date: "1週間前に訪問", text: "テラスでランチ→蔦屋書店で読書→セレクトショップ巡りの最高コース。駐車場無料なのも嬉しい。半日はあっという間です。", badges: [{type:"pref",label:"🛍 ショッピング好き"},{type:"pref",label:"🍽 グルメ好き"}], helpful: 35 },
+    { name: "Hさん", initial: "H", color: "#7cb9e8", stars: 4, date: "2週間前に訪問", text: "子供が絵本コーナーで1時間も夢中に。スタッフさんも優しくて安心です。カフェのラテアートが可愛かった！", badges: [{type:"family",label:"🏠 小さいお子様あり"},{type:"area",label:"📍 辻堂周辺"}], helpful: 28 },
+    { name: "Nさん", initial: "N", color: "#f5c77e", stars: 5, date: "3週間前に訪問", text: "週末マルシェに行ってきました！地元の作家さんの器がとても素敵で、つい3つも購入。食べ物の出店も充実していて大満足。", badges: [{type:"pref",label:"🛍 ショッピング好き"},{type:"area",label:"📍 藤沢市在住"}], helpful: 19 },
+  ],
+  3: [
+    { name: "Aさん", initial: "A", color: "#c4b5e0", stars: 5, date: "5日前に訪問", text: "竹林の静寂が本当に心地いい。抹茶をいただきながら竹を眺める時間は、日常を忘れられる贅沢なひとときでした。朝一番がおすすめ。", badges: [{type:"pref",label:"🎨 アート好き"},{type:"pref",label:"🌿 自然好き"}], helpful: 56 },
+    { name: "鈴木さん", initial: "鈴", color: "#7cb9e8", stars: 5, date: "1週間前に訪問", text: "ライトアップイベントに行ってきました。昼間とは全く違う幻想的な雰囲気で感動。カップルにも家族にもおすすめです！", badges: [{type:"family",label:"👫 カップル"},{type:"area",label:"📍 鎌倉周辺"}], helpful: 44 },
+    { name: "Rさん", initial: "R", color: "#f0a1c2", stars: 4, date: "2週間前に訪問", text: "写真好きにはたまらないスポット。竹のトンネルの光と影のコントラストが美しくて、何枚もシャッターを切りました。", badges: [{type:"pref",label:"🎨 アート好き"},{type:"area",label:"📍 横浜市在住"}], helpful: 33 },
+    { name: "中村さん", initial: "中", color: "#a8d8b9", stars: 5, date: "3週間前に訪問", text: "小学生の息子が「竹すごい！」と大興奮。お抹茶も「苦いけど美味しい」と喜んでいました。歴史の勉強にもなって一石二鳥。", badges: [{type:"family",label:"🧒 小学生の子供あり"},{type:"pref",label:"🌿 自然好き"}], helpful: 27 },
+  ],
+  4: [
+    { name: "Tさん", initial: "T", color: "#f5c77e", stars: 5, date: "3日前に訪問", text: "しらすトーストが想像以上に美味しい！食べ歩きだけで満腹になります。10時スタートがベスト、午後は混みます。", badges: [{type:"pref",label:"🍽 グルメ好き"},{type:"area",label:"📍 鎌倉周辺"}], helpful: 48 },
+    { name: "Iさん", initial: "I", color: "#a8d8b9", stars: 4, date: "1週間前に訪問", text: "食べ歩きマップを片手に制覇チャレンジ！抹茶ソフトクリームが3軒あってどれも個性的。食べ比べが楽しかったです。", badges: [{type:"pref",label:"🍽 グルメ好き"},{type:"family",label:"👫 カップル"}], helpful: 36 },
+    { name: "Wさん", initial: "W", color: "#c4b5e0", stars: 5, date: "2週間前に訪問", text: "7歳の娘がせんべい手焼き体験にハマりました。食べ歩きだから子供も飽きずに楽しめて、家族全員大満足の休日でした。", badges: [{type:"family",label:"🧒 小学生の子供あり"},{type:"pref",label:"🍽 グルメ好き"}], helpful: 29 },
+    { name: "Eさん", initial: "E", color: "#7cb9e8", stars: 4, date: "1ヶ月前に訪問", text: "鶴岡八幡宮の参拝とセットで行きました。お土産もたくさん買えて充実した一日。駐車場は少し離れた場所がおすすめ。", badges: [{type:"area",label:"📍 藤沢市在住"},{type:"pref",label:"🛍 ショッピング好き"}], helpful: 15 },
+  ],
+  5: [
+    { name: "Oさん", initial: "O", color: "#c4b5e0", stars: 5, date: "4日前に訪問", text: "現代アートと自然の融合が最高。インスタ映えもするし、何度来ても新しい発見があります。ステンドグラスの塔は圧巻でした！", badges: [{type:"pref",label:"🎨 アート好き"},{type:"pref",label:"🌿 自然好き"}], helpful: 63 },
+    { name: "山田さん", initial: "山", color: "#f0a1c2", stars: 5, date: "1週間前に訪問", text: "4歳の息子がネットの森で2時間遊びました。大人はピカソ館でじっくり鑑賞。足湯で休憩もできて、家族全員楽しめました。", badges: [{type:"family",label:"🏠 小さいお子様あり"},{type:"pref",label:"🎨 アート好き"}], helpful: 51 },
+    { name: "Fさん", initial: "F", color: "#a8d8b9", stars: 5, date: "2週間前に訪問", text: "彫刻を見ながらの散歩が気持ちいい。足湯でアート鑑賞という贅沢な時間でした。敷地が広いので歩きやすい靴で！", badges: [{type:"pref",label:"🎨 アート好き"},{type:"area",label:"📍 横浜市在住"}], helpful: 39 },
+    { name: "松本さん", initial: "松", color: "#f5c77e", stars: 4, date: "3週間前に訪問", text: "小学3年の娘が体験型アートに夢中。自分で色を塗った作品が壁に映し出されて大喜びでした。箱根観光のメインイベントに最適。", badges: [{type:"family",label:"🧒 小学生の子供あり"},{type:"area",label:"📍 箱根周辺"}], helpful: 25 },
+  ],
+  6: [
+    { name: "Dさん", initial: "D", color: "#7cb9e8", stars: 5, date: "5日前に訪問", text: "露天風呂からの山の景色が絶景。温泉の質も良くてお肌がすべすべに。ランチの御膳も地元食材で大満足でした！", badges: [{type:"pref",label:"🍽 グルメ好き"},{type:"pref",label:"🌿 自然好き"}], helpful: 47 },
+    { name: "高橋さん", initial: "高", color: "#f0a1c2", stars: 5, date: "1週間前に訪問", text: "カップルで日帰り温泉デートに。貸切風呂もあってゆったり過ごせました。帰りに箱根ベーカリーでパンを買うのもおすすめ。", badges: [{type:"family",label:"👫 カップル"},{type:"area",label:"📍 藤沢市在住"}], helpful: 38 },
+    { name: "Gさん", initial: "G", color: "#a8d8b9", stars: 4, date: "2週間前に訪問", text: "平日に行ったらほぼ貸切状態。リラクゼーションスペースで仮眠もできて、最高にリフレッシュできました。", badges: [{type:"pref",label:"🌿 自然好き"},{type:"area",label:"📍 横浜市在住"}], helpful: 22 },
+  ],
+  7: [
+    { name: "Lさん", initial: "L", color: "#f5c77e", stars: 5, date: "3日前に訪問", text: "焼き小籠包の食べ比べが最高に楽しい！5軒回って一番は○○飯店。食べ歩きマップを作ったので次回はさらに攻めます。", badges: [{type:"pref",label:"🍽 グルメ好き"},{type:"area",label:"📍 横浜市在住"}], helpful: 55 },
+    { name: "伊藤さん", initial: "伊", color: "#7cb9e8", stars: 5, date: "1週間前に訪問", text: "8歳の息子が北京ダック串にハマって3本も食べました。中国茶のお店で一休みしたら、子供も大人もリフレッシュ。", badges: [{type:"family",label:"🧒 小学生の子供あり"},{type:"pref",label:"🍽 グルメ好き"}], helpful: 32 },
+    { name: "Pさん", initial: "P", color: "#c4b5e0", stars: 4, date: "2週間前に訪問", text: "飲茶ランチが本格的でコスパ最高。山下公園の散歩とセットで半日コースがおすすめ。駐車場は少し離れた場所が安い。", badges: [{type:"pref",label:"🍽 グルメ好き"},{type:"family",label:"👫 カップル"}], helpful: 26 },
+    { name: "Uさん", initial: "U", color: "#a8d8b9", stars: 5, date: "3週間前に訪問", text: "タピオカからエッグタルトまで、甘いもの巡りだけでも大満足。お土産に月餅を買って帰ったら家族に大好評でした。", badges: [{type:"pref",label:"🍽 グルメ好き"},{type:"pref",label:"🛍 ショッピング好き"}], helpful: 20 },
+  ],
+  8: [
+    { name: "Cさん", initial: "C", color: "#c4b5e0", stars: 5, date: "4日前に訪問", text: "想像以上の没入感。光の中を歩いているうちに2時間経っていました。写真もどこで撮っても映えるし、アート好きは絶対行くべき！", badges: [{type:"pref",label:"🎨 アート好き"},{type:"area",label:"📍 横浜市在住"}], helpful: 68 },
+    { name: "木村さん", initial: "木", color: "#f0a1c2", stars: 5, date: "1週間前に訪問", text: "3歳の娘が「きれい！きれい！」と大はしゃぎ。お絵描きエリアで描いた花が壁に咲いて親子で感動しました。", badges: [{type:"family",label:"🏠 小さいお子様あり"},{type:"pref",label:"🎨 アート好き"}], helpful: 52 },
+    { name: "Jさん", initial: "J", color: "#a8d8b9", stars: 4, date: "2週間前に訪問", text: "デートで行きました。幻想的な空間が二人の距離をぐっと縮めてくれます。夕方からの方が空いていておすすめ。", badges: [{type:"family",label:"👫 カップル"},{type:"pref",label:"🎨 アート好き"}], helpful: 41 },
+    { name: "渡辺さん", initial: "渡", color: "#f5c77e", stars: 5, date: "3週間前に訪問", text: "小学2年の息子が体験型エリアで大興奮。自分の描いた魚が泳いでいるのを見て「すごい！」の連発。大人も子供も楽しめます。", badges: [{type:"family",label:"🧒 小学生の子供あり"},{type:"area",label:"📍 藤沢市在住"}], helpful: 34 },
+  ],
+  9: [
+    { name: "Bさん", initial: "B", color: "#f5c77e", stars: 5, date: "3日前に訪問", text: "スプリングセールで最大80%OFF！お目当てのブランドが半額以下で買えて大満足。富士山を見ながらのランチも最高でした。", badges: [{type:"pref",label:"🛍 ショッピング好き"},{type:"area",label:"📍 藤沢市在住"}], helpful: 45 },
+    { name: "小林さん", initial: "小", color: "#7cb9e8", stars: 4, date: "1週間前に訪問", text: "広すぎて1日じゃ回りきれない！事前にマップで目星をつけていくのがおすすめ。フードコートの御殿場高原ビールは格別。", badges: [{type:"pref",label:"🛍 ショッピング好き"},{type:"pref",label:"🍽 グルメ好き"}], helpful: 33 },
+    { name: "Vさん", initial: "V", color: "#a8d8b9", stars: 4, date: "2週間前に訪問", text: "箱根の温泉帰りに立ち寄りました。夕方から行くと空いていて快適。キッズスペースもあるので子連れでも安心です。", badges: [{type:"family",label:"🧒 小学生の子供あり"},{type:"area",label:"📍 箱根周辺"}], helpful: 21 },
+  ],
+  10: [
+    { name: "Xさん", initial: "X", color: "#a8d8b9", stars: 5, date: "5日前に訪問", text: "BBQからのみかん狩り、最高の休日！海を見ながらのBBQは開放感があって、子供たちも大喜びでした。", badges: [{type:"pref",label:"⚽ アクティブ"},{type:"family",label:"🧒 小学生の子供あり"}], helpful: 37 },
+    { name: "加藤さん", initial: "加", color: "#f0a1c2", stars: 4, date: "1週間前に訪問", text: "手ぶらBBQが楽すぎる！片付けもお任せで、子供と全力で遊べました。帰りに三崎でまぐろ丼も食べて大満足。", badges: [{type:"family",label:"🏠 小さいお子様あり"},{type:"pref",label:"🍽 グルメ好き"}], helpful: 29 },
+    { name: "Qさん", initial: "Q", color: "#7cb9e8", stars: 5, date: "2週間前に訪問", text: "カップルでドライブがてら。海沿いの道が気持ちよくて、BBQもみかん狩りも二人で楽しめました。夕日がきれい。", badges: [{type:"family",label:"👫 カップル"},{type:"pref",label:"🌿 自然好き"}], helpful: 23 },
+  ],
+  11: [
+    { name: "Zさん", initial: "Z", color: "#f0a1c2", stars: 5, date: "4日前に訪問", text: "2歳の娘がイルカショーに釘付け！タッチプールで初めてヒトデを触って嬉しそうでした。ベビーカーでも回りやすいです。", badges: [{type:"family",label:"🏠 小さいお子様あり"},{type:"pref",label:"🌿 自然好き"}], helpful: 58 },
+    { name: "吉田さん", initial: "吉", color: "#a8d8b9", stars: 5, date: "1週間前に訪問", text: "イワシの大群が銀色に輝く相模湾大水槽は何度見ても感動。江ノ島散策と合わせて丸一日楽しめました。", badges: [{type:"area",label:"📍 藤沢市在住"},{type:"pref",label:"🌿 自然好き"}], helpful: 43 },
+    { name: "Rさん", initial: "R", color: "#c4b5e0", stars: 4, date: "2週間前に訪問", text: "5歳と3歳の子供連れで。ペンギンのお散歩タイムがかわいすぎて子供たちが大興奮。年パスを買おうか本気で検討中。", badges: [{type:"family",label:"🏠 小さいお子様あり"},{type:"area",label:"📍 江ノ島周辺"}], helpful: 36 },
+    { name: "井上さん", initial: "井", color: "#f5c77e", stars: 5, date: "3週間前に訪問", text: "ナイトアクアリウムがとてもロマンチック。クラゲのライトアップが幻想的で、デートにぴったりの雰囲気でした。", badges: [{type:"family",label:"👫 カップル"},{type:"pref",label:"🎨 アート好き"}], helpful: 30 },
+  ],
+  12: [
+    { name: "Mさん", initial: "M", color: "#f0a1c2", stars: 5, date: "3日前に訪問", text: "4歳と6歳の子供連れで。ポニー乗馬に乳しぼり体験、アスレチックと丸一日遊び倒しました。帰りの車で即寝でした(笑)", badges: [{type:"family",label:"🏠 小さいお子様あり"},{type:"area",label:"📍 横浜市在住"}], helpful: 49 },
+    { name: "斎藤さん", initial: "斎", color: "#7cb9e8", stars: 5, date: "1週間前に訪問", text: "小学1年の息子がアスレチックに大ハマり。新しいエリアもできていて、前回とは違う楽しみ方ができました。", badges: [{type:"family",label:"🧒 小学生の子供あり"},{type:"pref",label:"⚽ アクティブ"}], helpful: 40 },
+    { name: "Kさん", initial: "K", color: "#a8d8b9", stars: 4, date: "2週間前に訪問", text: "手ぶらBBQで家族ランチ。子供たちは食べ終わったらすぐ遊び場に走っていきました。大人はのんびりできて最高。", badges: [{type:"family",label:"🏠 小さいお子様あり"},{type:"pref",label:"🍽 グルメ好き"}], helpful: 28 },
+    { name: "Wさん", initial: "W", color: "#c4b5e0", stars: 4, date: "3週間前に訪問", text: "雨の日でも屋内施設が充実していて楽しめました。牧場のソフトクリームが絶品！次は晴れた日に来たい。", badges: [{type:"family",label:"🧒 小学生の子供あり"},{type:"area",label:"📍 藤沢市在住"}], helpful: 19 },
+  ],
+};
+
+// ===== デモ用の初期お気に入りデータ =====
+const DEMO_FAVORITES_IDS = [2, 3, 5];
+
+// ===== State =====
+let userProfile = JSON.parse(localStorage.getItem("outing_profile") || "null");
+let storedFavs = JSON.parse(localStorage.getItem("outing_favs") || "null");
+let favorites = storedFavs !== null ? storedFavs : ALL_CARDS.filter(c => DEMO_FAVORITES_IDS.includes(c.id));
+if (storedFavs === null) localStorage.setItem("outing_favs", JSON.stringify(favorites));
+let swipeHistory = JSON.parse(localStorage.getItem("outing_history") || "[]");
+let sortedCards = [];
+let filteredCards = [];
+let currentFilter = "all";
+let currentIndex = 0;
+let currentMode = "normal";
+let adventureSorted = [];
+let selectedFamily = null;
+let selectedPrefs = [];
+
+// ===== オンボーディング =====
+document.getElementById("obNext0").addEventListener("click", () => {
+  document.getElementById("obStep0").classList.remove("active");
+  document.getElementById("obStep1").classList.add("active");
+});
+
+document.getElementById("familyOptions").addEventListener("click", e => {
+  const opt = e.target.closest(".ob-option");
+  if (!opt) return;
+  document.querySelectorAll("#familyOptions .ob-option").forEach(o => o.classList.remove("selected"));
+  opt.classList.add("selected");
+  selectedFamily = opt.dataset.value;
+  document.getElementById("obNext1").classList.add("enabled");
+});
+
+document.getElementById("obNext1").addEventListener("click", () => {
+  if (!selectedFamily) return;
+  document.getElementById("obStep1").classList.remove("active");
+  document.getElementById("obStep2").classList.add("active");
+});
+
+document.getElementById("prefTags").addEventListener("click", e => {
+  const tag = e.target.closest(".ob-tag");
+  if (!tag) return;
+  tag.classList.toggle("selected");
+  const val = tag.dataset.value;
+  if (selectedPrefs.includes(val)) {
+    selectedPrefs = selectedPrefs.filter(p => p !== val);
+  } else if (selectedPrefs.length < 3) {
+    selectedPrefs.push(val);
+  } else {
+    tag.classList.remove("selected");
+    return;
+  }
+  document.getElementById("obNext2").classList.toggle("enabled", selectedPrefs.length === 3);
+});
+
+document.getElementById("obNext2").addEventListener("click", () => {
+  if (selectedPrefs.length !== 3) return;
+  userProfile = { family: selectedFamily, prefs: selectedPrefs };
+  localStorage.setItem("outing_profile", JSON.stringify(userProfile));
+  startApp();
+});
+
+// ===== リセット =====
+document.getElementById("resetBtn").addEventListener("click", () => {
+  localStorage.removeItem("outing_profile");
+  localStorage.removeItem("outing_favs");
+  localStorage.removeItem("outing_history");
+  userProfile = null;
+  favorites = ALL_CARDS.filter(c => DEMO_FAVORITES_IDS.includes(c.id));
+  localStorage.setItem("outing_favs", JSON.stringify(favorites));
+  swipeHistory = [];
+  currentMode = "normal";
+  adventureSorted = [];
+  selectedFamily = null;
+  selectedPrefs = [];
+  document.querySelectorAll("#familyOptions .ob-option").forEach(o => o.classList.remove("selected"));
+  document.querySelectorAll("#prefTags .ob-tag").forEach(t => t.classList.remove("selected"));
+  document.getElementById("obNext1").classList.remove("enabled");
+  document.getElementById("obNext2").classList.remove("enabled");
+  document.getElementById("obStep1").classList.remove("active");
+  document.getElementById("obStep2").classList.remove("active");
+  document.getElementById("obStep0").classList.add("active");
+  document.getElementById("app").classList.remove("visible");
+  document.getElementById("onboarding").style.display = "flex";
+});
+
+// ===== アプリ開始 =====
+function startApp() {
+  document.getElementById("onboarding").style.display = "none";
+  document.getElementById("app").classList.add("visible");
+
+  const familyLabels = { solo: "一人", couple: "カップル", small_kids: "小さい子供あり", big_kids: "小学生以上の子供あり" };
+  const prefLabels = { nature: "自然・公園", gourmet: "グルメ・カフェ", art: "アート・文化", shopping: "ショッピング", active: "アクティブ" };
+  const prefText = userProfile.prefs.map(p => prefLabels[p]).join("・");
+  document.getElementById("personalizeText").textContent =
+    `移動データ × ${familyLabels[userProfile.family]} × ${prefText}`;
+
+  sortedCards = ALL_CARDS.map(c => {
+    let s = 0;
+    if (c.family.includes(userProfile.family)) s += 10;
+    c.tags.forEach(t => { if (userProfile.prefs.includes(t)) s += 5; });
+    if (c.areaType === "familiar") s += 3;
+    return { ...c, score: s };
+  }).sort((a, b) => b.score - a.score);
+
+  currentFilter = "all";
+  currentMode = "normal";
+  filteredCards = [...sortedCards];
+  adventureSorted = [];
+  currentIndex = 0;
+  document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+  document.querySelector('.filter-btn[data-filter="all"]').classList.add("active");
+  document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+  document.querySelector('nav button[data-tab="swipe"]').classList.add("active");
+  document.querySelectorAll(".mode-toggle-btn").forEach(b => {
+    b.classList.toggle("active", b.dataset.mode === "normal");
+  });
+  document.getElementById("mainContent").style.display = "block";
+  document.getElementById("filters").style.display = "flex";
+  document.getElementById("modeToggle").style.display = "flex";
+  document.getElementById("adventureMessage").style.display = "none";
+  document.getElementById("favSection").style.display = "none";
+  document.getElementById("statsSection").style.display = "none";
+  document.querySelector(".personalize-badge").style.display = "block";
+  renderCard();
+}
+
+// ===== モード切替 =====
+function setMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll(".mode-toggle-btn").forEach(b => {
+    b.classList.toggle("active", b.dataset.mode === mode);
+  });
+  document.getElementById("adventureMessage").style.display = mode === "adventure" ? "block" : "none";
+
+  if (mode === "adventure") {
+    // 冒険モード: rocket → sprout → home の順
+    const levelOrder = { rocket: 0, sprout: 1, home: 2 };
+    adventureSorted = [...sortedCards].sort((a, b) => {
+      const la = ADVENTURE_DATA[a.id]?.level || "home";
+      const lb = ADVENTURE_DATA[b.id]?.level || "home";
+      if (levelOrder[la] !== levelOrder[lb]) return levelOrder[la] - levelOrder[lb];
+      return b.score - a.score;
+    });
+    filteredCards = currentFilter === "all" ? [...adventureSorted] : adventureSorted.filter(c => c.season === currentFilter);
+  } else {
+    filteredCards = currentFilter === "all" ? [...sortedCards] : sortedCards.filter(c => c.season === currentFilter);
+  }
+  currentIndex = 0;
+  renderCard();
+}
+
+// ===== カード描画 =====
+function renderCard() {
+  const area = document.getElementById("cardArea");
+  area.innerHTML = "";
+  if (currentIndex >= filteredCards.length) {
+    area.innerHTML = '<div class="empty-msg"><h2>おしまい！</h2><p>すべてのカードを確認しました。<br>フィルターを変えてみてね</p></div>';
+    document.getElementById("buttons").style.display = "none";
+    return;
+  }
+  document.getElementById("buttons").style.display = "flex";
+  const card = filteredCards[currentIndex];
+
+  const el = document.createElement("div");
+  el.className = "card";
+  const adv = ADVENTURE_DATA[card.id] || { level: "home" };
+  const advLabels = { home: "🏠 いつもの", sprout: "🌱 ちょい冒険", rocket: "🚀 新しい発見" };
+  el.innerHTML = `
+    <img src="${card.image}" alt="${card.title}" draggable="false">
+    <div class="card-adventure-badge ${adv.level}">${advLabels[adv.level]}</div>
+    <div class="stamp stamp-like">気になる</div>
+    <div class="stamp stamp-nope">スキップ</div>
+    <div class="card-overlay">
+      <span class="card-location-tag">🚗 ${card.locationTag}</span>
+      <span class="card-category">${card.category}</span>
+      <h2>${card.title}</h2>
+      <p>${card.desc}</p>
+      <div class="card-reason">💡 ${card.reason}</div>
+      <div class="card-credit">${card.credit}　|　${card.driveInfo}</div>
+    </div>
+  `;
+
+  let startX = 0, curX = 0, isDragging = false;
+  function onStart(x) { startX = x; curX = 0; isDragging = true; }
+  function onMove(x) {
+    if (!isDragging) return;
+    curX = x - startX;
+    el.style.transform = `translateX(${curX}px) rotate(${curX * 0.08}deg)`;
+    el.style.transition = "none";
+    el.querySelector(".stamp-like").style.opacity = Math.min(curX / 100, 1);
+    el.querySelector(".stamp-nope").style.opacity = Math.min(-curX / 100, 1);
+  }
+  function onEnd() {
+    if (!isDragging) return;
+    isDragging = false;
+    if (curX > 100) swipeAway("like");
+    else if (curX < -100) swipeAway("dislike");
+    else {
+      el.style.transition = "transform 0.3s ease";
+      el.style.transform = "";
+      el.querySelector(".stamp-like").style.opacity = 0;
+      el.querySelector(".stamp-nope").style.opacity = 0;
+    }
+  }
+  el.addEventListener("mousedown", e => onStart(e.clientX));
+  document.addEventListener("mousemove", e => onMove(e.clientX));
+  document.addEventListener("mouseup", onEnd);
+  el.addEventListener("touchstart", e => onStart(e.touches[0].clientX), { passive: true });
+  document.addEventListener("touchmove", e => onMove(e.touches[0].clientX), { passive: true });
+  document.addEventListener("touchend", onEnd);
+  area.appendChild(el);
+}
+
+function swipeAway(action) {
+  const card = filteredCards[currentIndex];
+  const el = document.querySelector(".card");
+  if (!el) return;
+  const dir = action === "like" ? 1 : -1;
+  el.style.transition = "transform 0.4s ease, opacity 0.4s ease";
+  el.style.transform = `translateX(${dir * 500}px) rotate(${dir * 30}deg)`;
+  el.style.opacity = "0";
+  swipeHistory.push({ id: card.id, action, category: card.category, tags: card.tags, areaType: card.areaType, time: Date.now() });
+  localStorage.setItem("outing_history", JSON.stringify(swipeHistory));
+  if (action === "like" && !favorites.find(f => f.id === card.id)) {
+    favorites.push(card);
+    localStorage.setItem("outing_favs", JSON.stringify(favorites));
+  }
+  setTimeout(() => { currentIndex++; renderCard(); }, 350);
+}
+
+document.getElementById("btnLike").addEventListener("click", () => swipeAway("like"));
+document.getElementById("btnNope").addEventListener("click", () => swipeAway("dislike"));
+
+// ===== フィルター =====
+document.getElementById("filters").addEventListener("click", e => {
+  if (!e.target.classList.contains("filter-btn")) return;
+  document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+  e.target.classList.add("active");
+  currentFilter = e.target.dataset.filter;
+  const base = currentMode === "adventure" ? adventureSorted : sortedCards;
+  filteredCards = currentFilter === "all" ? [...base] : base.filter(c => c.season === currentFilter);
+  currentIndex = 0;
+  renderCard();
+});
+
+// ===== タブ切替 =====
+document.querySelectorAll("nav button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    const tab = btn.dataset.tab;
+    document.getElementById("mainContent").style.display = tab === "swipe" ? "block" : "none";
+    document.getElementById("filters").style.display = tab === "swipe" ? "flex" : "none";
+    document.querySelector(".personalize-badge").style.display = tab === "swipe" ? "block" : "none";
+    document.getElementById("modeToggle").style.display = tab === "swipe" ? "flex" : "none";
+    document.getElementById("adventureMessage").style.display = (tab === "swipe" && currentMode === "adventure") ? "block" : "none";
+    document.getElementById("favSection").style.display = tab === "favs" ? "block" : "none";
+    document.getElementById("statsSection").style.display = tab === "stats" ? "block" : "none";
+    if (tab === "favs") renderFavorites();
+    if (tab === "stats") renderStats();
+  });
+});
+
+// ===== お気に入り =====
+function renderFavorites() {
+  const list = document.getElementById("favList");
+  if (favorites.length === 0) {
+    list.innerHTML = '<div class="fav-empty">まだありません。カードを右スワイプしてみよう！</div>';
+    return;
+  }
+  list.innerHTML = favorites.map(f => `
+    <div class="fav-item" onclick="openDetail(${f.id})" style="cursor:pointer;">
+      <img src="${f.image}" alt="${f.title}">
+      <div class="fav-info">
+        <h3>${f.title}</h3>
+        <p style="font-size:11px;color:#555;margin-bottom:2px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${f.desc}</p>
+        <p style="font-size:10px;color:#4a6cf7;">🚗 ${f.driveInfo}</p>
+      </div>
+    </div>
+  `).join("");
+}
+
+function removeFav(id) {
+  favorites = favorites.filter(f => f.id !== id);
+  localStorage.setItem("outing_favs", JSON.stringify(favorites));
+  renderFavorites();
+}
+
+// ===== 詳細画面 =====
+let currentDetailId = null;
+let currentNewsData = [];
+let currentNewsShown = 3;
+
+// ニュースカードHTML生成
+function buildNewsCardHTML(n) {
+  const badges = [];
+  if (n.isNew) badges.push('<span class="news-badge-new">NEW</span>');
+  if (n.seasonTag) badges.push('<span class="news-badge-season">' + n.seasonTag + '</span>');
+  return '<div class="news-card" onclick="alert(\'外部リンクに遷移します（デモ）\')">' +
+    '<img class="news-card-img" src="' + n.image + '" alt="" loading="lazy">' +
+    '<div class="news-card-body">' +
+      (badges.length ? '<div class="news-card-tags">' + badges.join('') + '</div>' : '') +
+      '<div class="news-card-title">' + n.title + '</div>' +
+      '<div class="news-card-meta"><span class="news-card-source">' + n.source + '</span><span>' + n.date + '</span></div>' +
+    '</div>' +
+  '</div>';
+}
+
+// ニュースリスト描画
+function renderNewsList() {
+  const total = currentNewsData.length;
+  const shown = Math.min(currentNewsShown, total);
+  const visibleNews = currentNewsData.slice(0, shown);
+  document.getElementById("detailNewsList").innerHTML = visibleNews.map(buildNewsCardHTML).join("");
+  document.getElementById("newsCount").textContent = "全" + total + "件中" + shown + "件表示";
+  const btn = document.getElementById("newsMoreBtn");
+  if (shown < total) {
+    btn.style.display = "block";
+    btn.textContent = "もっと見る（残り" + (total - shown) + "件）";
+  } else {
+    btn.style.display = "none";
+  }
+}
+
+// もっと見るボタン
+function showMoreNews() {
+  currentNewsShown += 5;
+  renderNewsList();
+}
+
+// ===== 口コミセクション =====
+let currentReviewsData = [];
+
+function getReviewStats(reviews) {
+  var profile = userProfile || { family: "solo", prefs: ["nature","gourmet","art"] };
+  var familyLabels = { solo: "おひとり様", couple: "カップル", small_kids: "小さいお子様あり", big_kids: "小学生以上のお子様あり" };
+  var prefLabels = { nature: "自然・公園", gourmet: "グルメ", art: "アート", shopping: "ショッピング", active: "アクティブ" };
+
+  var familyMatch = reviews.filter(function(rv) {
+    var fam = profile.family;
+    if (fam === "small_kids") return rv.badges.some(function(b) { return b.label.indexOf("小さいお子様") >= 0; });
+    if (fam === "big_kids") return rv.badges.some(function(b) { return b.label.indexOf("小学生") >= 0; });
+    if (fam === "couple") return rv.badges.some(function(b) { return b.label.indexOf("カップル") >= 0; });
+    return false;
+  });
+  var avgStars = (reviews.reduce(function(s,rv) { return s + rv.stars; }, 0) / reviews.length).toFixed(1);
+  var totalCount = reviews.length + Math.floor(Math.random() * 15) + 10; // モック: 実際はもっと多い想定
+  var similarCount = familyMatch.length + Math.floor(Math.random() * 8) + 3;
+  var topPref = (profile.prefs || [])[0];
+  var topPrefLabel = prefLabels[topPref] || "";
+
+  var starsIcons = "";
+  var full = Math.floor(parseFloat(avgStars));
+  for (var i = 0; i < 5; i++) starsIcons += i < full ? "★" : "☆";
+
+  return {
+    avgStars: avgStars, starsIcons: starsIcons,
+    totalCount: totalCount, similarCount: similarCount,
+    familyMatch: familyMatch.length, familyLabel: familyLabels[profile.family] || "",
+    topPrefLabel: topPrefLabel, profile: profile
+  };
+}
+
+function renderReviews(card) {
+  currentReviewsData = REVIEWS_DATA[card.id] || [];
+  if (currentReviewsData.length === 0) {
+    document.getElementById("detailReviewsSummary").innerHTML = "";
+    document.getElementById("detailReviewsSection").innerHTML = "";
+    return;
+  }
+
+  var stats = getReviewStats(currentReviewsData);
+
+  // --- サマリーブロック（おすすめ理由の下） ---
+  var infoRows = "";
+  infoRows += '<div class="rsc-info-row">' + stats.totalCount + '件の口コミ</div>';
+  if (stats.familyMatch > 0) {
+    infoRows += '<div class="rsc-info-row">あなたと似たユーザー<strong>' + stats.similarCount + '人</strong>が訪問</div>';
+  } else {
+    infoRows += '<div class="rsc-info-row"><strong>' + stats.topPrefLabel + '好き</strong>の方に人気</div>';
+  }
+
+  document.getElementById("detailReviewsSummary").innerHTML =
+    '<div class="reviews-summary-card" onclick="scrollToReviews()">' +
+      '<div class="rsc-star-block">' +
+        '<div class="rsc-star-num">' + stats.avgStars + '</div>' +
+        '<div class="rsc-star-icons">' + stats.starsIcons + '</div>' +
+      '</div>' +
+      '<div class="rsc-divider"></div>' +
+      '<div class="rsc-info">' + infoRows + '</div>' +
+      '<div class="rsc-arrow">›</div>' +
+    '</div>';
+
+  // --- カルーセルセクション（おすすめポイントの下） ---
+  var subText = "";
+  if (stats.familyMatch > 0) {
+    subText = "あなたと同じ<strong>「" + stats.familyLabel + "」</strong>の" + stats.familyMatch + "人が訪問 ／ 平均 " + stats.avgStars + "★";
+  } else {
+    subText = "<strong>" + stats.topPrefLabel + "好き</strong>な方から高評価 ／ 平均 " + stats.avgStars + "★";
+  }
+
+  var cardsHTML = currentReviewsData.map(buildReviewCardHTML).join("");
+  var dotsHTML = currentReviewsData.map(function(_, i) {
+    return '<div class="reviews-dot' + (i === 0 ? ' active' : '') + '"></div>';
+  }).join("");
+
+  document.getElementById("detailReviewsSection").innerHTML =
+    '<div class="reviews-header">💬 似た家族構成・趣味の方の声</div>' +
+    '<div class="reviews-sub">' + subText + '</div>' +
+    '<div class="reviews-carousel-wrap">' +
+      '<div class="reviews-carousel" id="reviewsCarousel">' + cardsHTML + '</div>' +
+    '</div>' +
+    '<div class="reviews-dots" id="reviewsDots">' + dotsHTML + '</div>';
+
+  // スクロール監視でドット更新
+  setTimeout(function() {
+    var carousel = document.getElementById("reviewsCarousel");
+    if (carousel) {
+      carousel.addEventListener("scroll", updateReviewDots, { passive: true });
+    }
+  }, 100);
+}
+
+function buildReviewCardHTML(rv, idx) {
+  var starsHTML = "";
+  for (var i = 0; i < 5; i++) {
+    starsHTML += i < rv.stars ? "★" : "☆";
+  }
+  var badgesHTML = rv.badges.map(function(b) {
+    return '<span class="review-badge ' + b.type + '">' + b.label + '</span>';
+  }).join("");
+  return '<div class="review-card">' +
+    '<div class="review-card-header">' +
+      '<div class="review-avatar" style="background:' + rv.color + ';">' + rv.initial + '</div>' +
+      '<div class="review-user-info">' +
+        '<div class="review-user-name">' + rv.name + '</div>' +
+        '<div class="review-visit-date">' + rv.date + '</div>' +
+      '</div>' +
+      '<div class="review-stars">' + starsHTML + '</div>' +
+    '</div>' +
+    '<div class="review-badges">' + badgesHTML + '</div>' +
+    '<div class="review-text">' + rv.text + '</div>' +
+    '<div class="review-helpful">' +
+      '<button class="review-helpful-btn" onclick="toggleHelpful(this)">👍 役に立った</button>' +
+      '<span class="review-helpful-count">' + rv.helpful + '</span>' +
+    '</div>' +
+  '</div>';
+}
+
+function updateReviewDots() {
+  var carousel = document.getElementById("reviewsCarousel");
+  var dots = document.querySelectorAll("#reviewsDots .reviews-dot");
+  if (!carousel || dots.length === 0) return;
+  var cards = carousel.querySelectorAll(".review-card");
+  if (cards.length === 0) return;
+  var cardW = cards[0].offsetWidth + 12; // gap
+  var idx = Math.round(carousel.scrollLeft / cardW);
+  idx = Math.max(0, Math.min(idx, dots.length - 1));
+  dots.forEach(function(d, i) {
+    d.classList.toggle("active", i === idx);
+  });
+}
+
+function scrollToReviews() {
+  var el = document.getElementById("detailReviewsSection");
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function toggleHelpful(btn) {
+  var countEl = btn.nextElementSibling;
+  if (btn.classList.contains("liked")) {
+    btn.classList.remove("liked");
+    countEl.textContent = parseInt(countEl.textContent) - 1;
+  } else {
+    btn.classList.add("liked");
+    countEl.textContent = parseInt(countEl.textContent) + 1;
+  }
+}
+
+// パーソナライズ理由描画
+function renderPersonalizedReason(card) {
+  const pr = PERSONALIZED_REASONS[card.id];
+  if (!pr) return;
+  const profile = userProfile || { family: "solo", prefs: ["nature","gourmet","art"] };
+  const prefLabels = { nature: "自然・公園", gourmet: "グルメ・カフェ", art: "アート・文化", shopping: "ショッピング", active: "アクティブ・スポーツ" };
+  const familyLabels = { solo: "おひとり様", couple: "カップル", small_kids: "小さなお子様連れ", big_kids: "お子様連れ" };
+
+  const reasons = [];
+
+  // 好みマッチ
+  const matchedPrefs = pr.prefMatch.filter(p => (profile.prefs || []).includes(p));
+  if (matchedPrefs.length > 0) {
+    const prefNames = matchedPrefs.map(p => prefLabels[p] || p).join("・");
+    reasons.push({ icon: "❤️", text: "あなたの「" + prefNames + "」好きにぴったりの場所です" });
+  }
+
+  // 訪問エリア
+  if (pr.visitArea && pr.visitCount > 0) {
+    reasons.push({ icon: "📍", text: "過去に" + pr.visitArea + "エリアを" + pr.visitCount + "回訪問されているので、こちらもおすすめ" });
+  }
+
+  // 家族構成
+  if (pr.kidFriendly && (profile.family === "small_kids" || profile.family === "big_kids")) {
+    if (profile.family === "small_kids") {
+      reasons.push({ icon: "👶", text: "小さなお子様が楽しめる体験型の施設です" });
+    } else {
+      reasons.push({ icon: "🧒", text: "お子様がアクティブに楽しめるスポットです" });
+    }
+  } else if (profile.family === "couple") {
+    reasons.push({ icon: "👫", text: "カップルにおすすめのデートスポットです" });
+  }
+
+  // 移動データ
+  reasons.push({ icon: "🚗", text: "土曜午前の出発パターンに合う" + card.driveInfo + "の距離です" });
+
+  const familyIcon = { solo: "🧑", couple: "👫", small_kids: "👶", big_kids: "🧒" };
+
+  document.getElementById("detailReasonPersonalized").innerHTML =
+    '<div class="detail-reason-personalized">' +
+      '<div class="drp-header">' +
+        '<div class="drp-avatar">' + (familyIcon[profile.family] || "🧑") + '</div>' +
+        '<div class="drp-label">あなた専用のおすすめ理由</div>' +
+      '</div>' +
+      '<div class="drp-reasons">' +
+        reasons.map(r =>
+          '<div class="drp-reason-item"><div class="drp-reason-icon">' + r.icon + '</div><div>' + r.text + '</div></div>'
+        ).join("") +
+      '</div>' +
+      '<div class="drp-match-bar"><div class="drp-match-fill" style="width:' + pr.matchScore + '%"></div></div>' +
+      '<div class="drp-match-text">あなたとの相性 ' + pr.matchScore + '%</div>' +
+    '</div>';
+}
+
+// ルートマップ描画（SVGベース）
+function renderRouteMap(card) {
+  const r = ROUTE_DATA[card.id];
+  if (!r) return;
+  const W = 400, H = 210;
+
+  // --- SVGパーツ構築 ---
+  let svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">';
+
+  // 背景（陸地）
+  svg += '<defs>';
+  svg += '<filter id="pinShadow' + card.id + '"><feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity="0.3"/></filter>';
+  svg += '<linearGradient id="seaGrad' + card.id + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#b8d4e8"/><stop offset="100%" stop-color="#8ebdd6"/></linearGradient>';
+  svg += '<linearGradient id="routeGrad' + card.id + '" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#4a6cf7"/><stop offset="100%" stop-color="#6b8cff"/></linearGradient>';
+  svg += '</defs>';
+
+  // 陸地ベース
+  svg += '<rect width="' + W + '" height="' + H + '" fill="#f0ede6"/>';
+
+  // 公園・緑地
+  (r.parks || []).forEach(function(p) {
+    svg += '<rect x="' + p.x + '" y="' + p.y + '" width="' + p.w + '" height="' + p.h + '" rx="3" fill="#c8e6c0" opacity="0.7"/>';
+  });
+
+  // 山
+  (r.mountain || []).forEach(function(m) {
+    svg += '<ellipse cx="' + (m.x + m.w/2) + '" cy="' + (m.y + m.h/2) + '" rx="' + (m.w/2) + '" ry="' + (m.h/2) + '" fill="#d4c9a8" opacity="0.5"/>';
+    svg += '<ellipse cx="' + (m.x + m.w/2) + '" cy="' + (m.y + m.h/2 - 3) + '" rx="' + (m.w/2 - 5) + '" ry="' + (m.h/2 - 4) + '" fill="#c9be9c" opacity="0.4"/>';
+  });
+
+  // 河川
+  (r.rivers || []).forEach(function(rv) {
+    svg += '<path d="' + rv + '" fill="none" stroke="#a8cfe0" stroke-width="2.5" opacity="0.6"/>';
+  });
+
+  // 海
+  if (r.sea) {
+    svg += '<path d="' + r.sea + '" fill="url(#seaGrad' + card.id + ')" opacity="0.85"/>';
+  }
+  // 海岸線
+  if (r.coastLine) {
+    svg += '<path d="' + r.coastLine + '" fill="none" stroke="#7cafc4" stroke-width="1" opacity="0.6"/>';
+  }
+
+  // 道路（背景）
+  (r.roads || []).forEach(function(rd) {
+    svg += '<path d="' + rd + '" fill="none" stroke="#fff" stroke-width="4" opacity="0.6" stroke-linecap="round"/>';
+    svg += '<path d="' + rd + '" fill="none" stroke="#e0ddd5" stroke-width="2.5" opacity="0.5" stroke-linecap="round"/>';
+  });
+
+  // 道路ラベル
+  (r.roadLabels || []).forEach(function(rl) {
+    svg += '<rect x="' + (rl.x - 1) + '" y="' + (rl.y - 7) + '" width="' + (rl.label.length * 6 + 6) + '" height="12" rx="2" fill="#fff" opacity="0.7"/>';
+    svg += '<text x="' + (rl.x + 2) + '" y="' + (rl.y + 2) + '" font-size="7" fill="#999" font-family="sans-serif">' + rl.label + '</text>';
+  });
+
+  // ルート線（太め＋影＋本体）
+  svg += '<path d="' + r.route + '" fill="none" stroke="rgba(74,108,247,0.2)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>';
+  svg += '<path d="' + r.route + '" fill="none" stroke="url(#routeGrad' + card.id + ')" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>';
+  svg += '<path d="' + r.route + '" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="0 8"/>';
+
+  // 地名ラベル（ランドマーク）
+  (r.landmarks || []).forEach(function(lm) {
+    var fs = lm.size === "m" ? 9 : 7.5;
+    svg += '<text x="' + lm.x + '" y="' + lm.y + '" font-size="' + fs + '" fill="#888" font-family="sans-serif" font-weight="500">' + lm.label + '</text>';
+  });
+
+  // 中間地点（ウェイポイント）
+  (r.waypoints || []).forEach(function(wp) {
+    svg += '<circle cx="' + wp.x + '" cy="' + wp.y + '" r="4" fill="#fff" stroke="#4a6cf7" stroke-width="1.5"/>';
+    svg += '<rect x="' + (wp.x + 6) + '" y="' + (wp.y - 7) + '" width="' + (wp.label.length * 7 + 8) + '" height="14" rx="3" fill="#fff" opacity="0.9"/>';
+    svg += '<text x="' + (wp.x + 10) + '" y="' + (wp.y + 3) + '" font-size="8" fill="#555" font-family="sans-serif" font-weight="600">' + wp.label + '</text>';
+  });
+
+  // 出発ピン（自宅）
+  var s = r.start;
+  svg += '<g filter="url(#pinShadow' + card.id + ')">';
+  svg += '<circle cx="' + s.x + '" cy="' + s.y + '" r="12" fill="rgba(74,108,247,0.15)"/>';
+  svg += '<circle cx="' + s.x + '" cy="' + s.y + '" r="7" fill="#4a6cf7" stroke="#fff" stroke-width="2.5"/>';
+  svg += '<circle cx="' + s.x + '" cy="' + s.y + '" r="2.5" fill="#fff"/>';
+  svg += '</g>';
+  svg += '<rect x="' + (s.x - 14) + '" y="' + (s.y + 14) + '" width="28" height="14" rx="4" fill="#4a6cf7"/>';
+  svg += '<text x="' + s.x + '" y="' + (s.y + 24) + '" font-size="8" fill="#fff" font-family="sans-serif" font-weight="700" text-anchor="middle">' + s.label + '</text>';
+
+  // 目的地ピン
+  var e = r.end;
+  svg += '<g filter="url(#pinShadow' + card.id + ')">';
+  svg += '<path d="M' + e.x + ',' + (e.y + 2) + ' l-8,-14 a10,10 0 1,1 16,0 z" fill="#ff4757" stroke="#fff" stroke-width="2"/>';
+  svg += '<circle cx="' + e.x + '" cy="' + (e.y - 14) + '" r="3.5" fill="#fff"/>';
+  svg += '</g>';
+  var elw = e.label.length * 7 + 10;
+  svg += '<rect x="' + (e.x - elw/2) + '" y="' + (e.y + 6) + '" width="' + elw + '" height="14" rx="4" fill="#ff4757"/>';
+  svg += '<text x="' + e.x + '" y="' + (e.y + 16) + '" font-size="8" fill="#fff" font-family="sans-serif" font-weight="700" text-anchor="middle">' + e.label + '</text>';
+
+  // Google Maps風の著作権表記（雰囲気）
+  svg += '<text x="' + (W - 5) + '" y="' + (H - 5) + '" font-size="6" fill="#bbb" font-family="sans-serif" text-anchor="end">Map data ©2026 Demo</text>';
+
+  svg += '</svg>';
+
+  document.getElementById("detailRouteMap").innerHTML =
+    '<div class="route-map-svg-wrap">' + svg + '</div>' +
+    '<div class="route-info-bar">' +
+      '<div class="route-info-detail">' +
+        '<div class="route-info-item"><span>🚗</span>約' + r.time + '</div>' +
+        '<div class="route-info-divider"></div>' +
+        '<div class="route-info-item"><span>📏</span>' + r.distance + '</div>' +
+      '</div>' +
+      '<button class="route-navi-btn" onclick="alert(\'カーナビを起動します（デモ）\\n\\n目的地: ' + card.address + '\\n所要時間: 約' + r.time + '\\n距離: ' + r.distance + '\')">🧭 ナビ起動</button>' +
+    '</div>' +
+    '<div class="route-endpoints">' +
+      '<div class="route-ep-dot" style="background:#4a6cf7;"></div>' +
+      '<span>藤沢市（自宅）</span>' +
+      '<div class="route-ep-line"></div>' +
+      '<div class="route-ep-dot" style="background:#ff4757;"></div>' +
+      '<span>' + card.address + '</span>' +
+    '</div>';
+}
+
+function openDetail(id) {
+  const card = ALL_CARDS.find(c => c.id === id);
+  if (!card) return;
+  currentDetailId = id;
+
+  document.getElementById("detailImg").src = card.image;
+  document.getElementById("detailTitle").textContent = card.title;
+  document.getElementById("detailLocationText").textContent = card.locationTag;
+  document.getElementById("detailDriveInfo").textContent = card.driveInfo + "  |  " + card.address;
+  document.getElementById("detailDesc").textContent = card.fullDesc || card.desc;
+
+  // タグ（冒険度ラベル追加）
+  const areaLabels = { familiar: "よく行くエリア", near_new: "移動圏内の新エリア", new: "新しいエリア" };
+  const adv = ADVENTURE_DATA[card.id] || { level: "home" };
+  const advTagLabels = { home: "🏠 いつもの場所", sprout: "🌱 ちょい冒険", rocket: "🚀 新しい発見" };
+  const advTagColors = { home: "", sprout: "style=\"background:#ecfdf5;color:#059669;border-color:#a7f3d0;\"", rocket: "style=\"background:#fff7ed;color:#d97706;border-color:#fed7aa;\"" };
+  document.getElementById("detailTags").innerHTML =
+    '<span class="detail-tag" ' + advTagColors[adv.level] + '>' + advTagLabels[adv.level] + '</span>' +
+    '<span class="detail-tag blue">' + (areaLabels[card.areaType] || "") + '</span>' +
+    '<span class="detail-tag">' + card.category + '</span>' +
+    '<span class="detail-tag">' + card.season + '</span>';
+
+  // 冒険度バナー
+  const bannerEl = document.getElementById("detailAdventureBanner");
+  if (adv.level === "sprout" || adv.level === "rocket") {
+    const icon = adv.level === "sprout" ? "🌱" : "🚀";
+    const title = adv.level === "sprout" ? "ちょっと冒険してみよう" : "新しい発見が待ってる！";
+    bannerEl.innerHTML = `
+      <div class="detail-adventure-banner ${adv.level}">
+        <div class="dab-icon">${icon}</div>
+        <div class="dab-content">
+          <div class="dab-title">${title}</div>
+          <div class="dab-reason">${adv.reason}</div>
+          ${adv.safety ? '<div class="dab-safety">🛡️ ' + adv.safety + '</div>' : ''}
+        </div>
+      </div>`;
+  } else {
+    bannerEl.innerHTML = "";
+  }
+
+  // パーソナライズ理由
+  renderPersonalizedReason(card);
+
+  // 口コミ
+  renderReviews(card);
+
+  // おすすめポイント
+  const pts = card.points || [];
+  document.getElementById("detailPoints").innerHTML = pts.map(p => {
+    const icon = p.substring(0, 2);
+    const text = p.substring(3);
+    return '<div class="detail-point"><div class="dp-icon">' + icon + '</div><div>' + text + '</div></div>';
+  }).join("");
+
+  // 施設情報
+  document.getElementById("detailInfoGrid").innerHTML = `
+    <div class="detail-info-item"><div class="dii-label">住所</div><div class="dii-value">${card.address || "—"}</div></div>
+    <div class="detail-info-item"><div class="dii-label">車での所要時間</div><div class="dii-value">${card.driveInfo}</div></div>
+    <div class="detail-info-item"><div class="dii-label">営業時間</div><div class="dii-value">${card.hours || "—"}</div></div>
+    <div class="detail-info-item"><div class="dii-label">定休日</div><div class="dii-value">${card.holiday || "—"}</div></div>
+  `;
+
+  // 最新情報（縦リスト + もっと見る）
+  currentNewsData = NEWS_DATA[card.id] || [];
+  currentNewsShown = 3;
+  renderNewsList();
+
+  // ルートマップ
+  renderRouteMap(card);
+
+  // 削除ボタンのテキストを更新
+  const isFav = favorites.some(f => f.id === id);
+  document.getElementById("detailRemove").textContent = isFav ? "気になるから削除" : "気になるに追加";
+
+  document.getElementById("detailScreen").classList.add("visible");
+}
+
+function closeDetail() {
+  document.getElementById("detailScreen").classList.remove("visible");
+  renderFavorites();
+}
+
+document.getElementById("detailBack").addEventListener("click", closeDetail);
+
+document.getElementById("detailShare").addEventListener("click", () => {
+  const card = ALL_CARDS.find(c => c.id === currentDetailId);
+  if (!card) return;
+  alert("LINE共有（デモ）\n\n今度の週末、「" + card.title + "」に行かない？\n" + card.driveInfo + "\n\n※ 実際のアプリではLINEアプリが起動します");
+});
+
+document.getElementById("detailRemove").addEventListener("click", () => {
+  if (!currentDetailId) return;
+  const isFav = favorites.some(f => f.id === currentDetailId);
+  if (isFav) {
+    removeFav(currentDetailId);
+    document.getElementById("detailRemove").textContent = "気になるに追加";
+  } else {
+    const card = ALL_CARDS.find(c => c.id === currentDetailId);
+    if (card && !favorites.find(f => f.id === card.id)) {
+      favorites.push(card);
+      localStorage.setItem("outing_favs", JSON.stringify(favorites));
+    }
+    document.getElementById("detailRemove").textContent = "気になるから削除";
+  }
+});
+
+// ===== 分析 =====
+function renderStats() {
+  const total = swipeHistory.length;
+  const likes = swipeHistory.filter(h => h.action === "like");
+  const likeCount = likes.length;
+
+  document.getElementById("statsSummary").innerHTML = `
+    <div class="summary-card"><div class="num">${total}</div><div class="label">提案を閲覧</div></div>
+    <div class="summary-card"><div class="num">${likeCount}</div><div class="label">気になるに追加</div></div>
+  `;
+
+  const catCounts = {};
+  likes.forEach(h => { catCounts[h.category] = (catCounts[h.category] || 0) + 1; });
+  const topCat = Object.entries(catCounts).sort((a, b) => b[1] - a[1]);
+  const topName = topCat.length > 0 ? topCat[0][0] : null;
+
+  // エリアタイプ集計
+  const areaCounts = { familiar: 0, near_new: 0, new: 0 };
+  likes.forEach(h => { if (areaCounts[h.areaType] !== undefined) areaCounts[h.areaType]++; });
+
+  const insight = document.getElementById("statsInsight");
+  if (total === 0) {
+    insight.innerHTML = "まだデータがありません。<br>カードをスワイプして好みを教えてください！";
+  } else {
+    const rate = total > 0 ? Math.round((likeCount / total) * 100) : 0;
+    let txt = `<strong>💡 分析結果</strong><br>これまで <b>${total}件</b> 提案し、<b>${likeCount}件</b> が気になるに追加（マッチ率 ${rate}%）。<br>`;
+    if (topName) txt += `あなたは <b>「${topName}」系</b> が好きなようです。<br>`;
+    if (areaCounts.familiar > 0) txt += `馴染みのエリア: ${areaCounts.familiar}件 / 新エリア: ${areaCounts.near_new + areaCounts.new}件 をお気に入りに。`;
+    insight.innerHTML = txt;
+  }
+
+  // ドーナツ更新
+  document.getElementById("donutTotal").textContent = ALL_CARDS.length;
+
+  // 棒グラフ
+  const allCats = [...new Set(ALL_CARDS.map(c => c.category))];
+  const max = Math.max(...allCats.map(c => catCounts[c] || 0), 1);
+  const colors = ["#2ed573","#ffd93d","#4a6cf7","#ff6b6b","#a29bfe","#fd79a8"];
+  document.getElementById("barChart").innerHTML = allCats.map((cat, i) => {
+    const count = catCounts[cat] || 0;
+    return `<div class="bar-row">
+      <div class="bar-label">${cat}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(count/max)*100}%;background:${colors[i%colors.length]}"></div></div>
+      <span style="font-size:12px;color:#555;min-width:18px;">${count}</span>
+    </div>`;
+  }).join("");
+
+  // 冒険統計
+  const advCounts = { home: 0, sprout: 0, rocket: 0 };
+  likes.forEach(h => {
+    const lv = ADVENTURE_DATA[h.id]?.level || "home";
+    advCounts[lv]++;
+  });
+  const totalAdv = advCounts.sprout + advCounts.rocket;
+  let growthMsg = "";
+  if (totalAdv === 0) {
+    growthMsg = "まだ冒険スポットをお気に入りに追加していません。<strong>冒険モード</strong>で新しい場所を見つけてみよう！";
+  } else if (totalAdv <= 2) {
+    growthMsg = `冒険の第一歩を踏み出しました！<strong>新しい場所を${totalAdv}件</strong>お気に入りに。この調子で世界を広げよう！`;
+  } else {
+    growthMsg = `素晴らしい探検家ですね！<strong>${totalAdv}件</strong>の新しいスポットに興味を持っています。行動圏がどんどん広がっています！`;
+  }
+  document.getElementById("adventureStats").innerHTML = `
+    <h3>🧭 冒険レポート</h3>
+    <div class="adv-stat-grid">
+      <div class="adv-stat-item home-bg">
+        <div class="adv-stat-emoji">🏠</div>
+        <div class="adv-stat-val">${advCounts.home}</div>
+        <div class="adv-stat-lbl">いつもの</div>
+      </div>
+      <div class="adv-stat-item sprout-bg">
+        <div class="adv-stat-emoji">🌱</div>
+        <div class="adv-stat-val">${advCounts.sprout}</div>
+        <div class="adv-stat-lbl">ちょい冒険</div>
+      </div>
+      <div class="adv-stat-item rocket-bg">
+        <div class="adv-stat-emoji">🚀</div>
+        <div class="adv-stat-val">${advCounts.rocket}</div>
+        <div class="adv-stat-lbl">新しい発見</div>
+      </div>
+    </div>
+    <div class="adv-growth-bar">
+      <div class="adv-growth-icon">🌟</div>
+      <div class="adv-growth-text">${growthMsg}</div>
+    </div>`;
+}
+
+// ===== 初期化 =====
+if (userProfile) {
+  startApp();
+} else {
+  document.getElementById("onboarding").style.display = "flex";
+}
+</script>
+
+<!-- ===== グローバルタブバー ===== -->
+<div class="global-tab-bar">
+  <a href="index.html" class="tab-item">
+    <span class="tab-icon">🏠</span>
+    <span class="tab-label">ホーム</span>
+  </a>
+  <a href="recommendations.html" class="tab-item active">
+    <span class="tab-icon">🗺️</span>
+    <span class="tab-label">お出かけ</span>
+  </a>
+  <a href="memories.html" class="tab-item">
+    <span class="tab-icon">📸</span>
+    <span class="tab-label">思い出</span>
+  </a>
+  <a href="mypage.html" class="tab-item">
+    <span class="tab-icon">👤</span>
+    <span class="tab-label">マイページ</span>
+  </a>
+</div>
+
+</body>
+</html>

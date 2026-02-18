@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>思い出アルバム - 週末おでかけ</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 420px;
+      min-height: 100vh;
+      background: #fff;
+      padding-bottom: 70px;
+    }
+
+    .page-header {
+      background: #fff;
+      padding: 16px 20px;
+      border-bottom: 1px solid #eee;
+      text-align: center;
+    }
+    .page-header h1 {
+      font-size: 17px;
+      font-weight: 700;
+      color: #333;
+    }
+
+    .coming-soon-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 40px;
+      text-align: center;
+    }
+    .coming-soon-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+    .coming-soon-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 8px;
+    }
+    .coming-soon-desc {
+      font-size: 14px;
+      color: #999;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    .coming-soon-badge {
+      display: inline-block;
+      padding: 6px 16px;
+      background: #f0f2f5;
+      border-radius: 20px;
+      font-size: 12px;
+      color: #888;
+      font-weight: 600;
+    }
+
+    /* ===== グローバルタブバー ===== */
+    .global-tab-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      max-width: 420px;
+      margin: 0 auto;
+      height: 56px;
+      background: #fff;
+      display: flex;
+      border-top: 1px solid #e0e0e0;
+      z-index: 300;
+    }
+    .global-tab-bar a {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      color: #999;
+      font-size: 10px;
+      gap: 2px;
+      transition: color 0.2s;
+    }
+    .global-tab-bar a.active { color: #4a6cf7; font-weight: 600; }
+    .global-tab-bar a .tab-icon { font-size: 20px; }
+    .global-tab-bar a .tab-label { font-size: 10px; }
+  </style>
+</head>
+<body>
+
+<div class="page">
+  <div class="page-header">
+    <h1>思い出アルバム</h1>
+  </div>
+
+  <div class="coming-soon-container">
+    <div class="coming-soon-icon">📸</div>
+    <div class="coming-soon-title">まもなく公開</div>
+    <div class="coming-soon-desc">
+      お出かけの写真や感想を記録して、<br>
+      素敵な思い出を振り返りましょう。
+    </div>
+    <div class="coming-soon-badge">Coming Soon</div>
+  </div>
+</div>
+
+<!-- ===== グローバルタブバー ===== -->
+<div class="global-tab-bar">
+  <a href="index.html" class="tab-item">
+    <span class="tab-icon">🏠</span>
+    <span class="tab-label">ホーム</span>
+  </a>
+  <a href="recommendations.html" class="tab-item">
+    <span class="tab-icon">🗺️</span>
+    <span class="tab-label">お出かけ</span>
+  </a>
+  <a href="memories.html" class="tab-item active">
+    <span class="tab-icon">📸</span>
+    <span class="tab-label">思い出</span>
+  </a>
+  <a href="mypage.html" class="tab-item">
+    <span class="tab-icon">👤</span>
+    <span class="tab-label">マイページ</span>
+  </a>
+</div>
+
+</body>
+</html>
