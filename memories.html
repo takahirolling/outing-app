@@ -8,65 +8,320 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #f0f2f5;
+      background: #f7f6f3;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .page {
       width: 100%;
       max-width: 420px;
       min-height: 100vh;
-      background: #fff;
-      padding-bottom: 70px;
+      background: #f7f6f3;
+      padding-bottom: 80px;
     }
 
-    .page-header {
+    /* ===== ヘッダー ===== */
+    .mem-header {
       background: #fff;
-      padding: 16px 20px;
-      border-bottom: 1px solid #eee;
-      text-align: center;
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid #ece9e4;
     }
-    .page-header h1 {
-      font-size: 17px;
-      font-weight: 700;
-      color: #333;
-    }
-
-    .coming-soon-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 80px 40px;
-      text-align: center;
-    }
-    .coming-soon-icon {
-      font-size: 64px;
-      margin-bottom: 20px;
-    }
-    .coming-soon-title {
+    .mem-header h1 {
       font-size: 20px;
       font-weight: 700;
-      color: #333;
+      color: #1a1a1a;
+      margin-bottom: 2px;
+    }
+    .mem-header p {
+      font-size: 12px;
+      color: #aaa;
+    }
+    .mem-header-auto {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 6px;
+      padding: 4px 10px;
+      background: #f0eee9;
+      border-radius: 8px;
+      font-size: 10px;
+      color: #8a7d6d;
+      font-weight: 500;
+    }
+
+    /* ===== サマリーカード ===== */
+    .summary-card {
+      margin: 16px 16px 0;
+      padding: 20px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #fdf6ec 0%, #fce8d5 50%, #fbe0d0 100%);
+      position: relative;
+      overflow: hidden;
+      animation: fadeInUp 0.45s ease;
+    }
+    .summary-card::before {
+      content: '';
+      position: absolute;
+      top: -30px;
+      right: -20px;
+      width: 100px;
+      height: 100px;
+      background: radial-gradient(circle, rgba(251,191,120,0.3) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    .summary-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #c4844a;
+      margin-bottom: 12px;
+    }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 6px;
+    }
+    .summary-item {
+      text-align: center;
+    }
+    .summary-item .s-val {
+      font-size: 20px;
+      font-weight: 800;
+      color: #5c3d1e;
+      line-height: 1.2;
+    }
+    .summary-item .s-unit {
+      font-size: 9px;
+      color: #b0845a;
+      font-weight: 500;
+      margin-top: 2px;
+    }
+
+    /* ===== フィルタータブ ===== */
+    .filter-tabs {
+      display: flex;
+      gap: 8px;
+      padding: 16px 16px 0;
+      animation: fadeInUp 0.45s ease 0.05s both;
+    }
+    .filter-tab {
+      padding: 7px 14px;
+      border-radius: 20px;
+      border: none;
+      background: #fff;
+      color: #999;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .filter-tab.active {
+      background: #3d3229;
+      color: #fff;
+    }
+
+    /* ===== 思い出グリッド ===== */
+    .memories-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 16px;
+    }
+    .mem-card {
+      border-radius: 16px;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      animation: fadeInUp 0.45s ease both;
+      text-decoration: none;
+      color: inherit;
+    }
+    .mem-card:nth-child(1) { animation-delay: 0.08s; }
+    .mem-card:nth-child(2) { animation-delay: 0.12s; }
+    .mem-card:nth-child(3) { animation-delay: 0.16s; }
+    .mem-card:nth-child(4) { animation-delay: 0.20s; }
+    .mem-card:nth-child(5) { animation-delay: 0.24s; }
+    .mem-card:nth-child(6) { animation-delay: 0.28s; }
+    .mem-card:active {
+      transform: scale(0.97);
+      box-shadow: 0 4px 18px rgba(0,0,0,0.10);
+    }
+
+    .mem-img-wrap {
+      position: relative;
+      width: 100%;
+      height: 140px;
+      overflow: hidden;
+    }
+    .mem-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .mem-img-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 50px;
+      background: linear-gradient(transparent, rgba(0,0,0,0.35));
+    }
+    .mem-date-badge {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background: rgba(255,255,255,0.9);
+      backdrop-filter: blur(4px);
+      padding: 3px 8px;
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 600;
+      color: #555;
+    }
+    .mem-dist-badge {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px);
+      color: #fff;
+      padding: 2px 7px;
+      border-radius: 6px;
+      font-size: 9px;
+      font-weight: 600;
+    }
+
+    .mem-body {
+      padding: 10px 12px 12px;
+    }
+    .mem-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 3px;
+      line-height: 1.3;
+    }
+    .mem-places {
+      font-size: 10px;
+      color: #aaa;
+      margin-bottom: 6px;
+    }
+    .mem-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .mem-tag {
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: #f5f3ef;
+      color: #8a7d6d;
+      font-weight: 500;
+    }
+
+    /* ===== 提案セクション ===== */
+    .suggest-section {
+      padding: 16px 16px 0;
+      animation: fadeInUp 0.45s ease 0.05s both;
+    }
+    .suggest-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 10px;
+    }
+    .suggest-card {
+      background: #fffbf0;
+      border: 1.5px solid #f5e6c8;
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 10px;
+      animation: fadeInUp 0.45s ease 0.1s both;
+    }
+    .suggest-card-inner {
+      display: flex;
+      gap: 12px;
+    }
+    .suggest-thumb {
+      width: 72px;
+      height: 72px;
+      border-radius: 12px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+    .suggest-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .suggest-detected {
+      font-size: 9px;
+      color: #c4944a;
+      font-weight: 600;
+      margin-bottom: 3px;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .suggest-text {
+      font-size: 12px;
+      color: #444;
+      line-height: 1.5;
       margin-bottom: 8px;
     }
-    .coming-soon-desc {
-      font-size: 14px;
-      color: #999;
-      line-height: 1.6;
-      margin-bottom: 24px;
+    .suggest-text strong { color: #1a1a1a; }
+    .suggest-meta {
+      display: flex;
+      gap: 8px;
+      font-size: 10px;
+      color: #aaa;
+      margin-bottom: 10px;
     }
-    .coming-soon-badge {
-      display: inline-block;
-      padding: 6px 16px;
-      background: #f0f2f5;
-      border-radius: 20px;
+    .suggest-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .suggest-btn {
+      flex: 1;
+      padding: 8px 0;
+      border-radius: 10px;
+      border: none;
       font-size: 12px;
-      color: #888;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+    .suggest-btn:active { transform: scale(0.96); }
+    .suggest-btn.primary {
+      background: linear-gradient(135deg, #e8956d, #d4764e);
+      color: #fff;
+    }
+    .suggest-btn.secondary {
+      background: #f0eee9;
+      color: #999;
+    }
+
+    /* ===== 自動検知バッジ ===== */
+    .mem-auto-badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(4px);
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 9px;
       font-weight: 600;
+      color: #8a7d6d;
     }
 
     /* ===== グローバルタブバー ===== */
@@ -103,19 +358,99 @@
 <body>
 
 <div class="page">
-  <div class="page-header">
-    <h1>思い出アルバム</h1>
+
+  <!-- ===== ヘッダー ===== -->
+  <div class="mem-header">
+    <h1>📸 思い出アルバム</h1>
+    <p>あなたの特別な移動を、自動で思い出として記録します</p>
+    <div class="mem-header-auto">🤖 移動データから自動検知</div>
   </div>
 
-  <div class="coming-soon-container">
-    <div class="coming-soon-icon">📸</div>
-    <div class="coming-soon-title">まもなく公開</div>
-    <div class="coming-soon-desc">
-      お出かけの写真や感想を記録して、<br>
-      素敵な思い出を振り返りましょう。
+  <!-- ===== サマリーカード ===== -->
+  <div class="summary-card">
+    <div class="summary-label">🚗 今年のお出かけ</div>
+    <div class="summary-grid">
+      <div class="summary-item">
+        <div class="s-val">12</div>
+        <div class="s-unit">訪問エリア</div>
+      </div>
+      <div class="summary-item">
+        <div class="s-val">2,340</div>
+        <div class="s-unit">km 移動</div>
+      </div>
+      <div class="summary-item">
+        <div class="s-val">5</div>
+        <div class="s-unit">特別な旅</div>
+      </div>
+      <div class="summary-item">
+        <div class="s-val">8</div>
+        <div class="s-unit">バッジ</div>
+      </div>
     </div>
-    <div class="coming-soon-badge">Coming Soon</div>
   </div>
+
+  <!-- ===== 提案中の思い出 ===== -->
+  <div class="suggest-section">
+    <div class="suggest-title">🔔 新しい思い出の提案</div>
+
+    <div class="suggest-card" id="suggest1">
+      <div class="suggest-card-inner">
+        <img class="suggest-thumb"
+             src="https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=200&h=200&fit=crop"
+             alt="箱根方面">
+        <div class="suggest-info">
+          <div class="suggest-detected">🤖 移動データから自動検知</div>
+          <div class="suggest-text">
+            <strong>12月15日</strong>の長距離ドライブ<br>
+            箱根方面・<strong>142km</strong>
+          </div>
+          <div class="suggest-meta">
+            <span>📍 箱根湯本・芦ノ湖</span>
+            <span>⏱ 約4時間</span>
+          </div>
+        </div>
+      </div>
+      <div class="suggest-actions">
+        <button class="suggest-btn primary" onclick="acceptSuggestion(1)">記録する</button>
+        <button class="suggest-btn secondary" onclick="dismissSuggestion(1)">後で</button>
+      </div>
+    </div>
+
+    <div class="suggest-card" id="suggest2">
+      <div class="suggest-card-inner">
+        <img class="suggest-thumb"
+             src="https://images.unsplash.com/photo-1513407030348-c983a97b98d8?w=200&h=200&fit=crop"
+             alt="横浜方面">
+        <div class="suggest-info">
+          <div class="suggest-detected">🤖 移動データから自動検知</div>
+          <div class="suggest-text">
+            <strong>12月8日</strong>の夜間ドライブ<br>
+            横浜方面・<strong>38km</strong>
+          </div>
+          <div class="suggest-meta">
+            <span>📍 みなとみらい</span>
+            <span>⏱ 約3時間</span>
+          </div>
+        </div>
+      </div>
+      <div class="suggest-actions">
+        <button class="suggest-btn primary" onclick="acceptSuggestion(2)">記録する</button>
+        <button class="suggest-btn secondary" onclick="dismissSuggestion(2)">後で</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== フィルタータブ ===== -->
+  <div class="filter-tabs">
+    <button class="filter-tab active" onclick="filterMemories('all', this)">すべて</button>
+    <button class="filter-tab" onclick="filterMemories('thisYear', this)">今年</button>
+    <button class="filter-tab" onclick="filterMemories('lastYear', this)">去年</button>
+    <button class="filter-tab" onclick="filterMemories('long', this)">長距離</button>
+  </div>
+
+  <!-- ===== 思い出グリッド ===== -->
+  <div class="memories-grid" id="memoriesGrid"></div>
+
 </div>
 
 <!-- ===== グローバルタブバー ===== -->
@@ -137,6 +472,157 @@
     <span class="tab-label">マイページ</span>
   </a>
 </div>
+
+<script>
+const MEMORIES = [
+  {
+    id: 1,
+    title: "箱根温泉旅行",
+    date: "2025年12月",
+    image: "https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=400&h=300&fit=crop",
+    places: "箱根湯本・芦ノ湖",
+    distance: "120km",
+    tags: ["🏔️ 長距離", "♨️ 温泉"],
+    year: "thisYear",
+    long: true
+  },
+  {
+    id: 2,
+    title: "湘南海岸ドライブ",
+    date: "2025年11月",
+    image: "https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=400&h=300&fit=crop",
+    places: "江ノ島・茅ヶ崎",
+    distance: "45km",
+    tags: ["🌊 海", "☀️ 晴天"],
+    year: "thisYear",
+    long: false
+  },
+  {
+    id: 3,
+    title: "鎌倉紅葉めぐり",
+    date: "2025年11月",
+    image: "https://images.unsplash.com/photo-1528164344705-47542687000d?w=400&h=300&fit=crop",
+    places: "鎌倉・北鎌倉",
+    distance: "35km",
+    tags: ["🍁 紅葉", "⛩️ 寺社"],
+    year: "thisYear",
+    long: false
+  },
+  {
+    id: 4,
+    title: "富士山ドライブ",
+    date: "2025年10月",
+    image: "https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?w=400&h=300&fit=crop",
+    places: "御殿場・富士五湖",
+    distance: "180km",
+    tags: ["🗻 絶景", "🏔️ 長距離"],
+    year: "thisYear",
+    long: true
+  },
+  {
+    id: 5,
+    title: "横浜みなとみらい",
+    date: "2025年10月",
+    image: "https://images.unsplash.com/photo-1513407030348-c983a97b98d8?w=400&h=300&fit=crop",
+    places: "みなとみらい",
+    distance: "15km",
+    tags: ["🌃 夜景", "🍽️ グルメ"],
+    year: "thisYear",
+    long: false
+  },
+  {
+    id: 6,
+    title: "秋の軽井沢",
+    date: "2025年9月",
+    image: "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=400&h=300&fit=crop",
+    places: "軽井沢",
+    distance: "210km",
+    tags: ["🌲 高原", "🏔️ 長距離"],
+    year: "thisYear",
+    long: true
+  },
+  {
+    id: 7,
+    title: "伊豆半島一周",
+    date: "2024年11月",
+    image: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=400&h=300&fit=crop",
+    places: "熱海・下田・修善寺",
+    distance: "250km",
+    tags: ["🌊 海", "🏔️ 長距離"],
+    year: "lastYear",
+    long: true
+  },
+  {
+    id: 8,
+    title: "紅葉の日光",
+    date: "2024年10月",
+    image: "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=400&h=300&fit=crop",
+    places: "日光・中禅寺湖",
+    distance: "280km",
+    tags: ["🍁 紅葉", "🏔️ 長距離"],
+    year: "lastYear",
+    long: true
+  }
+];
+
+function renderMemories(filter) {
+  const grid = document.getElementById("memoriesGrid");
+  let items = MEMORIES;
+
+  if (filter === "thisYear") items = MEMORIES.filter(m => m.year === "thisYear");
+  else if (filter === "lastYear") items = MEMORIES.filter(m => m.year === "lastYear");
+  else if (filter === "long") items = MEMORIES.filter(m => m.long);
+
+  grid.innerHTML = items.map((m, i) => `
+    <div class="mem-card" style="animation-delay:${0.08 + i * 0.04}s" onclick="alert('「${m.title}」の詳細画面は次のアップデートで追加予定です！')">
+      <div class="mem-img-wrap">
+        <img class="mem-img" src="${m.image}" alt="${m.title}" loading="lazy">
+        <div class="mem-img-overlay"></div>
+        <div class="mem-date-badge">${m.date}</div>
+        <div class="mem-auto-badge">🤖 自動検知</div>
+        <div class="mem-dist-badge">🚗 ${m.distance}</div>
+      </div>
+      <div class="mem-body">
+        <div class="mem-title">${m.title}</div>
+        <div class="mem-places">📍 ${m.places}</div>
+        <div class="mem-tags">
+          ${m.tags.map(t => `<span class="mem-tag">${t}</span>`).join('')}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterMemories(filter, btn) {
+  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderMemories(filter);
+}
+
+function acceptSuggestion(id) {
+  const card = document.getElementById('suggest' + id);
+  card.style.transition = 'all 0.3s ease';
+  card.style.opacity = '0';
+  card.style.transform = 'scale(0.95)';
+  setTimeout(() => {
+    card.innerHTML = '<div style="text-align:center;padding:16px;color:#059669;font-size:13px;font-weight:600;">✅ 思い出を記録しました！</div>';
+    card.style.opacity = '1';
+    card.style.transform = 'scale(1)';
+    card.style.background = '#f0fdf4';
+    card.style.borderColor = '#bbf7d0';
+  }, 300);
+}
+
+function dismissSuggestion(id) {
+  const card = document.getElementById('suggest' + id);
+  card.style.transition = 'all 0.3s ease';
+  card.style.opacity = '0';
+  card.style.transform = 'translateX(20px)';
+  setTimeout(() => { card.style.display = 'none'; }, 300);
+}
+
+renderMemories('all');
+</script>
 
 </body>
 </html>
